@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package cato;
+option go_package = "cato/generated";
+
+import "google/protobuf/descriptor.proto";
+
+import "db.proto";
+import "http.proto";
+import "struct.proto";
+
+
+extend google.protobuf.MessageOptions {
+
+  cato.db.DbOption db_opt = 50001;
+  cato.db.TableOption table_opt = 50002;
+
+  cato.struct.StructOption struct_opt = 51001;
+}
+
+extend google.protobuf.FieldOptions {
+
+  cato.db.ColumnOption column_opt = 60001;
+
+  cato.struct.ImplementOption impl_opt = 61001;
+}
+
+extend google.protobuf.ServiceOptions {
+  cato.http.HttpOptions http_opt = 70001;
+}
+
+extend google.protobuf.MethodOptions {
+  cato.http.RouterOptions router_opt = 80001;
+}
+

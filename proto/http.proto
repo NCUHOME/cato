@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package cato.http;
+option go_package = "cato/generated";
+
+
+message RouterOptions {
+  string comment = 1;
+  string router = 2;
+  string content_type = 3;
+  bool as_http_api = 4;
+}
+
+message HttpOptions {
+  string group_prefix = 1;
+  bool as_http_service = 2;
+}

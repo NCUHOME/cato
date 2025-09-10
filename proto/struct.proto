@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package cato.struct;
+option go_package = "cato/generated";
+
+
+enum FieldMapper {
+  CATO_FIELD_MAPPER_NO_MAPPER = 0;
+  CATO_FIELD_MAPPER_CAMEL = 1;
+  CATO_FIELD_MAPPER_SNAKE_CASE = 2;
+}
+
+message FieldTag {
+  string tag_name = 1;
+  string tag_value = 2;
+  FieldMapper mapper = 3;
+}
+
+message StructOption {
+  repeated FieldTag field_default_tags = 1;
+}
+
+message ImplementOption {
+  bool flatten = 1;
+  bool generate_convertor = 2;
+}

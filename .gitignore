@@ -1,0 +1,38 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*_test
+
+# Dependency directories
+vendor/
+
+# Go module cache
+.go/
+
+# IDE and editor specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Build output and temporary files
+bin/
+pkg/
+target/
+tmp/
+
+# Log files
+*.log
+
+# Environment variables and configuration
+.env
+.local.env
+config.local.yaml
+
+# Operating system specific files
+.DS_Store
+Thumbs

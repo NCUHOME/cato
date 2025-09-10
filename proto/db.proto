@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package cato.db;
+option go_package = "cato/generated";
+
+import "struct.proto";
+
+
+message DbOption {
+  string name = 1;
+}
+
+message TableOption {
+  string name = 1;
+  string comment = 2;
+  string charset = 3;
+  cato.struct.FieldMapper field_mapper = 4;
+}
+
+enum DBKeyType {
+  CATO_DB_KEY_TYPE_NO_KEY = 0;
+  CATO_DB_KEY_TYPE_INDEX = 1;
+  CATO_DB_KEY_TYPE_UNIQUE = 2;
+  CATO_DB_KEY_TYPE_COMBINE = 3;
+  CATO_DB_KEY_TYPE_PRIMARY = 4;
+}
+
+message DBKey {
+  string key_name = 1;
+  DBKeyType key_type = 2;
+  bool auto_incr = 3;
+}
+
+message TimeOption {
+  bool unix_to_time = 1;
+}
+
+message ColumnDescriptor {
+  string field_type = 1;
+  string filed_name = 2;
+  bool nullable = 3;
+  string default = 4;
+  string comment = 5;
+}
+
+message ColumnOption {
+  repeated cato.struct.FieldTag tags = 1;
+  bool json_trans = 2;
+  TimeOption time_option = 3;
+  ColumnDescriptor col_desc = 4;
+  repeated DBKey keys = 5;
+}
