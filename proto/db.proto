@@ -10,8 +10,13 @@ message DbOption {
   string name = 1;
 }
 
+message TableNameOption {
+  string simple_name = 1;
+  bool lazy_name = 2;
+}
+
 message TableOption {
-  string name = 1;
+  TableNameOption name_option = 1;
   string comment = 2;
   string charset = 3;
   cato.struct.FieldMapper field_mapper = 4;
