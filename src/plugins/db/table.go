@@ -1,17 +1,25 @@
 package db
 
 import (
+	"io"
+	"log"
 	"text/template"
 
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 )
 
 type TableMessageEx struct {
-	message *ModelsPlugger
+	from *protogen.Message
+
+	methodWriter io.Writer
+	extraWriter  io.Writer
 
 	value *generated.TableOption
-
-	tmpl *template.Template
+	tmpl  *template.Template
 }
 
 type TableMessageExTmplPack struct {
@@ -24,13 +32,34 @@ func (t *TableMessageEx) GetTmplFileName() string {
 	return "table_name.tmpl"
 }
 
-func (t *TableMessageEx) Init(tmpl *template.Template, value *generated.TableOption) {
-	t.tmpl = tmpl
-	t.value = value
+func (t *TableMessageEx) FromMessageName() string {
+	return t.from.GoIdent.GoName
 }
 
-func (t *TableMessageEx) LoadPlugger(message *ModelsPlugger) {
-	t.message = message
+func (t *TableMessageEx) From(message *protogen.Message) {
+	t.from = message
+}
+
+func (t *TableMessageEx) Init(value interface{}) {
+	exValue, ok := value.(*generated.TableOption)
+	if !ok {
+		log.Fatalf("[-] can not convert %#v to TableOption", value)
+	}
+
+	t.value = exValue
+	t.tmpl = config.GetTemplate(t.GetTmplFileName())
+}
+
+func (t *TableMessageEx) SetWriter(writers ...io.Writer) {
+	if len(writers) < 2 {
+		log.Fatalln("[-] TableMessageEx need at least two writer")
+	}
+	t.setWriter(writers[0], writers[1])
+}
+
+func (t *TableMessageEx) setWriter(methodWriter, extraWriter io.Writer) {
+	t.methodWriter = methodWriter
+	t.extraWriter = extraWriter
 }
 
 func (t *TableMessageEx) AsTmplPack() interface{} {
@@ -39,25 +68,29 @@ func (t *TableMessageEx) AsTmplPack() interface{} {
 		return nil
 	}
 	return &TableMessageExTmplPack{
-		MessageTypeName: t.message.GetMessageName(),
+		MessageTypeName: t.FromMessageName(),
 		TableName:       nameOpt.GetSimpleName(),
 		Comment:         t.value.GetComment(),
 	}
 }
 
+func (t *TableMessageEx) FromExtType() protoreflect.ExtensionType {
+	return generated.E_TableOpt
+}
+
 func (t *TableMessageEx) Register() error {
-	if t.value == nil || t.message == nil {
+	if t.value == nil {
 		return nil
 	}
 	pack := &TableMessageExTmplPack{
-		MessageTypeName: t.message.GetMessageName(),
+		MessageTypeName: t.FromMessageName(),
 		Comment:         t.value.GetComment(),
 	}
 	// check if the table name is simple
 	if t.value.NameOption.GetSimpleName() != "" {
 		pack.TableName = t.value.NameOption.GetSimpleName()
-		return t.tmpl.Execute(t.message.BorrowMethodsWriter(), pack)
+		return t.tmpl.Execute(t.methodWriter, pack)
 	}
 	// empty table name will impl in an extra file
-	return t.tmpl.Execute(t.message.BorrowExtraWriter(), pack)
+	return t.tmpl.Execute(t.extraWriter, pack)
 }

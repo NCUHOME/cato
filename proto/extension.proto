@@ -1,13 +1,13 @@
 syntax = "proto3";
 
 package cato;
-option go_package = "cato/generated";
+option go_package = "github.com/ncuhome/cato/generated";
 
 import "google/protobuf/descriptor.proto";
 
-import "db.proto";
-import "http.proto";
-import "struct.proto";
+import "cato/proto/db.proto";
+import "cato/proto/http.proto";
+import "cato/proto/struct.proto";
 
 
 extend google.protobuf.MessageOptions {

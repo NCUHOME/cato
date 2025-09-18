@@ -1,20 +1,24 @@
 package db
 
 import (
-	"errors"
+	"io"
+	"log"
+	"text/template"
+
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
-	"text/template"
 )
 
 type ColumnFieldEx struct {
-	field  *FieldsPlugger
-	parent *ModelsPlugger
-
-	value *generated.ColumnOption
-
-	tmpl *template.Template
-	tags map[string]*common.Kv
+	fromField *protogen.Field
+	value     *generated.ColumnOption
+	tmpl      *template.Template
+	tags      map[string]*common.Kv
+	tagWriter io.Writer
 }
 
 type ColumnFieldExTmlPack struct {
@@ -23,17 +27,32 @@ type ColumnFieldExTmlPack struct {
 	Tags   []common.Kv
 }
 
+func (c *ColumnFieldEx) From(field *protogen.Field) {
+	c.fromField = field
+}
+
+func (c *ColumnFieldEx) Init(value interface{}) {
+	exValue, ok := value.(*generated.ColumnOption)
+	if !ok {
+		log.Fatalln("[-] cato ColumnFieldEx except ColumnOption")
+	}
+	c.value = exValue
+	c.tmpl = config.GetTemplate(c.GetTmplFileName())
+}
+
+func (c *ColumnFieldEx) SetWriter(writers ...io.Writer) {
+	if len(writers) == 0 {
+		log.Fatalln("[-] cato ColumnFieldEx except at least one writer")
+	}
+	c.tagWriter = writers[0]
+}
+
 func (c *ColumnFieldEx) GetTmplFileName() string {
 	return "column_field.tmpl"
 }
 
-func (c *ColumnFieldEx) Init(tmpl *template.Template) {
-	c.tmpl = tmpl
-}
+func (c *ColumnFieldEx) LoadPlugger() {
 
-func (c *ColumnFieldEx) LoadPlugger(field *FieldsPlugger, message *ModelsPlugger) {
-	c.field = field
-	c.parent = message
 }
 
 func (c *ColumnFieldEx) AsTmplPack() interface{} {
@@ -46,19 +65,20 @@ func (c *ColumnFieldEx) AsTmplPack() interface{} {
 		index++
 	}
 	return &ColumnFieldExTmlPack{
-		Name:   c.field.GetName(),
-		GoType: c.field.GetGoType(),
+		Name: c.fromField.GoName,
+		// todo mapper go type
+		GoType: c.fromField.Desc.Kind().String(),
 		Tags:   tags,
 	}
+}
+
+func (c *ColumnFieldEx) FromExtType() protoreflect.ExtensionType {
+	return generated.E_ColumnOpt
 }
 
 func (c *ColumnFieldEx) Register() error {
 	// self-tags has the highest priority
 	selfTags := c.value.GetTags()
-	wr, ok := c.parent.BorrowFieldsWriter(c.field.GetName())
-	if !ok {
-		return errors.New("could not create writer")
-	}
 	for _, tag := range selfTags {
 		c.tags[tag.TagName] = &common.Kv{
 			Key:   tag.TagName,
@@ -66,5 +86,5 @@ func (c *ColumnFieldEx) Register() error {
 		}
 	}
 	packData := c.AsTmplPack()
-	return c.tmpl.Execute(wr, packData)
+	return c.tmpl.Execute(c.tagWriter, packData)
 }
