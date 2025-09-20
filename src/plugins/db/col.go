@@ -11,6 +11,7 @@ import (
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
 type ColumnFieldEx struct {
@@ -65,9 +66,8 @@ func (c *ColumnFieldEx) AsTmplPack() interface{} {
 		index++
 	}
 	return &ColumnFieldExTmlPack{
-		Name: c.fromField.GoName,
-		// todo mapper go type
-		GoType: c.fromField.Desc.Kind().String(),
+		Name:   c.fromField.GoName,
+		GoType: utils.MapperGoTypeName(c.fromField.Desc),
 		Tags:   tags,
 	}
 }
@@ -84,6 +84,12 @@ func (c *ColumnFieldEx) Register() error {
 			Key:   tag.TagName,
 			Value: tag.TagValue,
 		}
+	}
+	// check if value has a json-trans option
+	hasJsonTrans := c.value.GetJsonTrans()
+	fieldKind := c.fromField.Desc.Kind()
+	if hasJsonTrans && fieldKind == protoreflect.MessageKind {
+
 	}
 	packData := c.AsTmplPack()
 	return c.tmpl.Execute(c.tagWriter, packData)

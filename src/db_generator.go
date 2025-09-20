@@ -1,6 +1,7 @@
 package src
 
 import (
+	"io"
 	"log"
 	"path/filepath"
 
@@ -9,7 +10,6 @@ import (
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/src/plugins"
-	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
 type DbGenerator struct {
@@ -27,10 +27,11 @@ func (g *DbGenerator) Generate(resp *pluginpb.CodeGeneratorResponse) *pluginpb.C
 		log.Fatalln(err)
 	}
 	for _, file := range genOption.Files {
-		goPackageName := utils.GetGoPackageName(file.GoImportPath)
-		if goPackageName == "" {
+		catoPackage, ok := GetCatoPackageFromFile(file.Desc)
+		if !ok {
 			continue
 		}
+		imports := GetImportPathFromFile(file)
 		for _, message := range file.Messages {
 			// test for single plugger
 			mp := new(plugins.MessagesPlugger)
@@ -43,7 +44,13 @@ func (g *DbGenerator) Generate(resp *pluginpb.CodeGeneratorResponse) *pluginpb.C
 			if !ok {
 				continue
 			}
-			fileName := filepath.Join(utils.GetGoFilePath(file.GoImportPath), mp.GenerateFile())
+			fileName := filepath.Join(catoPackage, mp.GenerateFile())
+			for _, importName := range imports {
+				_, err = io.WriteString(mp.BorrowImportsWriter(), importName)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}
 			content := mp.GenerateContent()
 			resp.File = append(resp.File, &pluginpb.CodeGeneratorResponse_File{
 				Name:    &fileName,

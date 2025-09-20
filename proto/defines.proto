@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package cato.defines;
+option go_package = "github.com/ncuhome/cato/generated";
+
+
+message CatoOptions {
+  string cato_package = 1;
+}

@@ -106,7 +106,7 @@ func (mp *MessagesPlugger) AsTmplPack() *ModelsPluggerPack {
 		methods[index] = method.String()
 	}
 	return &ModelsPluggerPack{
-		PackageName: utils.GetGoPackageName(mp.root.GoImportPath),
+		PackageName: utils.GetGoImportName(mp.root.GoImportPath),
 		Imports:     imports,
 		ModelName:   mp.message.GoIdent.GoName,
 		Fields:      fields,
@@ -150,7 +150,7 @@ func (mp *MessagesPlugger) Active() (bool, error) {
 	for name, field := range mp.fields {
 		_, err := field.Active()
 		if err != nil {
-			log.Fatalln("[-] cato generte field error, ", name, err)
+			log.Fatalln("[-] cato generate field error, ", name, err)
 		}
 	}
 

@@ -8,28 +8,33 @@ import "google/protobuf/descriptor.proto";
 import "cato/proto/db.proto";
 import "cato/proto/http.proto";
 import "cato/proto/struct.proto";
+import "cato/proto/defines.proto";
 
+
+extend google.protobuf.FileOptions {
+  cato.defines.CatoOptions cato_opt = 50001;
+}
 
 extend google.protobuf.MessageOptions {
 
-  cato.db.DbOption db_opt = 50001;
-  cato.db.TableOption table_opt = 50002;
+  cato.db.DbOption db_opt = 60001;
+  cato.db.TableOption table_opt = 60002;
 
-  cato.struct.StructOption struct_opt = 51001;
+  cato.struct.StructOption struct_opt = 61001;
 }
 
 extend google.protobuf.FieldOptions {
 
-  cato.db.ColumnOption column_opt = 60001;
+  cato.db.ColumnOption column_opt = 70001;
 
-  cato.struct.ImplementOption impl_opt = 61001;
+  cato.struct.ImplementOption impl_opt = 71001;
 }
 
 extend google.protobuf.ServiceOptions {
-  cato.http.HttpOptions http_opt = 70001;
+  cato.http.HttpOptions http_opt = 80001;
 }
 
 extend google.protobuf.MethodOptions {
-  cato.http.RouterOptions router_opt = 80001;
+  cato.http.RouterOptions router_opt = 90001;
 }
 
