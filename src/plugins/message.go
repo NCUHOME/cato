@@ -10,16 +10,15 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/ncuhome/cato/generated"
+	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/db"
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
 type MessagesPlugger struct {
 	message *protogen.Message
-	root    *protogen.File
+	context *common.GenContext
 
 	fields  map[string]*FieldsPlugger
 	imports []*strings.Builder
@@ -36,34 +35,13 @@ type ModelsPluggerPack struct {
 	Methods     []string
 }
 
-func (mp *MessagesPlugger) LoadContext(message *protogen.Message, file *protogen.File) {
-	mp.message = message
-	mp.root = file
+func (mp *MessagesPlugger) LoadContext(gc *common.GenContext) {
+	mp.context = gc
+	mp.message = gc.GetNowMessage()
 	mp.fields = make(map[string]*FieldsPlugger)
 	mp.imports = make([]*strings.Builder, 0)
 	mp.methods = make([]*strings.Builder, 0)
 	mp.extra = make([]*strings.Builder, 0)
-}
-
-func (mp *MessagesPlugger) findField(name string) (*protogen.Field, bool) {
-	for _, field := range mp.message.Fields {
-		if string(field.Desc.Name()) == name {
-			return field, true
-		}
-	}
-	return nil, false
-}
-
-func (mp *MessagesPlugger) BorrowFieldsWriter(name string) (io.Writer, bool) {
-	_, ok := mp.fields[name]
-	if !ok {
-		fieldDesc, ok := mp.findField(name)
-		if !ok {
-			return nil, false
-		}
-		mp.fields[name] = &FieldsPlugger{fieldDesc, make([]*strings.Builder, 0)}
-	}
-	return mp.fields[name].BorrowWriter(), true
 }
 
 func (mp *MessagesPlugger) BorrowMethodsWriter() io.Writer {
@@ -79,14 +57,6 @@ func (mp *MessagesPlugger) BorrowImportsWriter() io.Writer {
 func (mp *MessagesPlugger) BorrowExtraWriter() io.Writer {
 	mp.extra = append(mp.extra, new(strings.Builder))
 	return mp.extra[len(mp.extra)-1]
-}
-
-func (mp *MessagesPlugger) GetExtensionType() protoreflect.ExtensionType {
-	return generated.E_DbOpt
-}
-
-func (mp *MessagesPlugger) GetMessageName() string {
-	return mp.message.GoIdent.GoName
 }
 
 func (mp *MessagesPlugger) AsTmplPack() *ModelsPluggerPack {
@@ -106,7 +76,7 @@ func (mp *MessagesPlugger) AsTmplPack() *ModelsPluggerPack {
 		methods[index] = method.String()
 	}
 	return &ModelsPluggerPack{
-		PackageName: utils.GetGoImportName(mp.root.GoImportPath),
+		PackageName: utils.GetGoImportName(mp.context.GetNowFile().GoImportPath),
 		Imports:     imports,
 		ModelName:   mp.message.GoIdent.GoName,
 		Fields:      fields,
@@ -116,11 +86,9 @@ func (mp *MessagesPlugger) AsTmplPack() *ModelsPluggerPack {
 
 func (mp *MessagesPlugger) ParseFields() {
 	for _, field := range mp.message.Fields {
-		fieldPlugger := &FieldsPlugger{
-			fieldValue: field,
-			fields:     make([]*strings.Builder, 0),
-		}
-		mp.fields[field.GoName] = fieldPlugger
+		fp := new(FieldsPlugger)
+		fp.LoadContext(mp.context.WithField(field))
+		mp.fields[field.GoName] = fp
 	}
 }
 
@@ -147,25 +115,25 @@ func (mp *MessagesPlugger) GenerateContent() string {
 
 func (mp *MessagesPlugger) Active() (bool, error) {
 	mp.ParseFields()
+	descriptor := protodesc.ToDescriptorProto(mp.message.Desc)
+	butter := db.ChooseButter(mp.message.Desc)
+	for index := range butter {
+		if !proto.HasExtension(descriptor.Options, butter[index].FromExtType()) {
+			continue
+		}
+		value := proto.GetExtension(descriptor.Options, butter[index].FromExtType())
+		butter[index].Init(mp.context, value)
+		butter[index].SetWriter(mp.BorrowMethodsWriter(), mp.BorrowExtraWriter())
+		err := butter[index].Register()
+		if err != nil {
+			return false, err
+		}
+	}
 	for name, field := range mp.fields {
 		_, err := field.Active()
 		if err != nil {
 			log.Fatalln("[-] cato generate field error, ", name, err)
 		}
-	}
-
-	tableExt := new(db.TableMessageEx)
-	descriptor := protodesc.ToDescriptorProto(mp.message.Desc)
-	if !proto.HasExtension(descriptor.Options, tableExt.FromExtType()) {
-		return false, nil
-	}
-	value := proto.GetExtension(descriptor.Options, tableExt.FromExtType())
-	tableExt.Init(value)
-	tableExt.From(mp.message)
-	tableExt.SetWriter(mp.BorrowMethodsWriter(), mp.BorrowExtraWriter())
-	err := tableExt.Register()
-	if err != nil {
-		return false, err
 	}
 	return true, nil
 }

@@ -14,6 +14,12 @@ import (
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
+func init() {
+	register(func() common.Butter {
+		return new(ColumnFieldEx)
+	})
+}
+
 type ColumnFieldEx struct {
 	fromField *protogen.Field
 	value     *generated.ColumnOption
@@ -23,22 +29,18 @@ type ColumnFieldEx struct {
 }
 
 type ColumnFieldExTmlPack struct {
-	Name   string
-	GoType string
-	Tags   []common.Kv
+	*common.FieldPack
+	Tags []common.Kv
 }
 
-func (c *ColumnFieldEx) From(field *protogen.Field) {
-	c.fromField = field
-}
-
-func (c *ColumnFieldEx) Init(value interface{}) {
+func (c *ColumnFieldEx) Init(gc *common.GenContext, value interface{}) {
 	exValue, ok := value.(*generated.ColumnOption)
 	if !ok {
 		log.Fatalln("[-] cato ColumnFieldEx except ColumnOption")
 	}
 	c.value = exValue
 	c.tmpl = config.GetTemplate(c.GetTmplFileName())
+	c.fromField = gc.GetNowField()
 }
 
 func (c *ColumnFieldEx) SetWriter(writers ...io.Writer) {
@@ -66,14 +68,21 @@ func (c *ColumnFieldEx) AsTmplPack() interface{} {
 		index++
 	}
 	return &ColumnFieldExTmlPack{
-		Name:   c.fromField.GoName,
-		GoType: utils.MapperGoTypeName(c.fromField.Desc),
-		Tags:   tags,
+		FieldPack: &common.FieldPack{
+			Name:   c.fromField.GoName,
+			GoType: utils.MapperGoTypeName(c.fromField.Desc),
+		},
+		Tags: tags,
 	}
 }
 
 func (c *ColumnFieldEx) FromExtType() protoreflect.ExtensionType {
 	return generated.E_ColumnOpt
+}
+
+func (c *ColumnFieldEx) WorkOn(desc protoreflect.Descriptor) bool {
+	_, ok := desc.(protoreflect.FieldDescriptor)
+	return ok
 }
 
 func (c *ColumnFieldEx) Register() error {
@@ -89,6 +98,7 @@ func (c *ColumnFieldEx) Register() error {
 	hasJsonTrans := c.value.GetJsonTrans()
 	fieldKind := c.fromField.Desc.Kind()
 	if hasJsonTrans && fieldKind == protoreflect.MessageKind {
+		// need register into message-field
 
 	}
 	packData := c.AsTmplPack()

@@ -1,4 +1,4 @@
-package plugins
+package common
 
 import (
 	"io"
@@ -7,10 +7,12 @@ import (
 )
 
 type Butter interface {
+	FromExtType() protoreflect.ExtensionType
+	WorkOn(desc protoreflect.Descriptor) bool
 	GetTmplFileName() string
-	Init(value interface{})
+	
+	Init(gc *GenContext, value interface{})
 	SetWriter(writers ...io.Writer)
 	AsTmplPack() interface{}
 	Register() error
-	FromExtType() protoreflect.ExtensionType
 }

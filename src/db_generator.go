@@ -10,6 +10,7 @@ import (
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/src/plugins"
+	"github.com/ncuhome/cato/src/plugins/common"
 )
 
 type DbGenerator struct {
@@ -26,17 +27,20 @@ func (g *DbGenerator) Generate(resp *pluginpb.CodeGeneratorResponse) *pluginpb.C
 	if err != nil {
 		log.Fatalln(err)
 	}
+	context := new(common.GenContext)
 	for _, file := range genOption.Files {
 		catoPackage, ok := GetCatoPackageFromFile(file.Desc)
 		if !ok {
 			continue
 		}
+		fc := context.WithFile(file)
 		imports := GetImportPathFromFile(file)
 		for _, message := range file.Messages {
 			// test for single plugger
+			mc := fc.WithMessage(message)
 			mp := new(plugins.MessagesPlugger)
 			mp.Init(config.GetTemplate(mp.GetTemplateName()))
-			mp.LoadContext(message, file)
+			mp.LoadContext(mc)
 			ok, err := mp.Active()
 			if err != nil {
 				log.Fatalln(err)

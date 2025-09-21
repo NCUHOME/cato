@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	tmplPath = "templates/"
+	TmplPath        = "templates"
+	CommonFieldTmpl = "common_tmpl"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 
 	templates = make(map[string]*template.Template)
 )
+
 var templateNames = []string{
 	"column_field.tmpl",
 	"models.tmpl",
@@ -25,8 +27,11 @@ var templateNames = []string{
 }
 
 func init() {
+	templates[CommonFieldTmpl], _ = template.New(CommonFieldTmpl).
+		Parse(`{{ .Name }} {{ .GoType }} `)
+
 	for _, name := range templateNames {
-		path := filepath.Join("templates", name)
+		path := filepath.Join(TmplPath, name)
 		fs, err := templatesFs.Open(path)
 		if err != nil {
 			log.Fatalln(err)
@@ -40,7 +45,6 @@ func init() {
 			log.Fatalln(err)
 		}
 		templates[name] = tmpl
-
 	}
 }
 

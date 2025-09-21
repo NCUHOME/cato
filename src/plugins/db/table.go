@@ -10,7 +10,14 @@ import (
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
+	"github.com/ncuhome/cato/src/plugins/common"
 )
+
+func init() {
+	register(func() common.Butter {
+		return new(TableMessageEx)
+	})
+}
 
 type TableMessageEx struct {
 	from *protogen.Message
@@ -36,11 +43,7 @@ func (t *TableMessageEx) FromMessageName() string {
 	return t.from.GoIdent.GoName
 }
 
-func (t *TableMessageEx) From(message *protogen.Message) {
-	t.from = message
-}
-
-func (t *TableMessageEx) Init(value interface{}) {
+func (t *TableMessageEx) Init(gc *common.GenContext, value interface{}) {
 	exValue, ok := value.(*generated.TableOption)
 	if !ok {
 		log.Fatalf("[-] can not convert %#v to TableOption", value)
@@ -48,6 +51,7 @@ func (t *TableMessageEx) Init(value interface{}) {
 
 	t.value = exValue
 	t.tmpl = config.GetTemplate(t.GetTmplFileName())
+	t.from = gc.GetNowMessage()
 }
 
 func (t *TableMessageEx) SetWriter(writers ...io.Writer) {
@@ -76,6 +80,11 @@ func (t *TableMessageEx) AsTmplPack() interface{} {
 
 func (t *TableMessageEx) FromExtType() protoreflect.ExtensionType {
 	return generated.E_TableOpt
+}
+
+func (t *TableMessageEx) WorkOn(desc protoreflect.Descriptor) bool {
+	_, ok := desc.(protoreflect.MessageDescriptor)
+	return ok
 }
 
 func (t *TableMessageEx) Register() error {
