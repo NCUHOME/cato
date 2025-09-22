@@ -11,7 +11,6 @@ import (
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/db"
-	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
 type FieldsPlugger struct {
@@ -58,7 +57,7 @@ func (fp *FieldsPlugger) Active() (bool, error) {
 		err := config.GetTemplate(config.CommonFieldTmpl).
 			Execute(fp.BorrowWriter(), &common.FieldPack{
 				Name:   fp.field.GoName,
-				GoType: utils.MapperGoTypeName(fp.field.Desc),
+				GoType: common.MapperGoTypeName(fp.context, fp.field.Desc),
 			})
 		if err != nil {
 			return false, err

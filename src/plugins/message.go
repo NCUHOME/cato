@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 
+	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/db"
 	"github.com/ncuhome/cato/src/plugins/utils"
@@ -101,7 +102,13 @@ func (mp *MessagesPlugger) Init(template *template.Template) {
 }
 
 func (mp *MessagesPlugger) GenerateFile() string {
-	return fmt.Sprintf("%s.cato.go", strings.ToLower(mp.message.GoIdent.GoName))
+	return fmt.Sprintf("%s.cato.go", mp.outputFileName())
+}
+
+func (mp *MessagesPlugger) outputFileName() string {
+	patterns := utils.SplitCamelWords(mp.message.GoIdent.GoName)
+	mapper := utils.GetStringMapper(generated.FieldMapper_CATO_FIELD_MAPPER_SNAKE_CASE)
+	return mapper(patterns)
 }
 
 func (mp *MessagesPlugger) GenerateContent() string {

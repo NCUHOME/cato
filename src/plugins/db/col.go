@@ -11,7 +11,6 @@ import (
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
-	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
 func init() {
@@ -22,6 +21,7 @@ func init() {
 
 type ColumnFieldEx struct {
 	fromField *protogen.Field
+	gc        *common.GenContext
 	value     *generated.ColumnOption
 	tmpl      *template.Template
 	tags      map[string]*common.Kv
@@ -41,6 +41,7 @@ func (c *ColumnFieldEx) Init(gc *common.GenContext, value interface{}) {
 	c.value = exValue
 	c.tmpl = config.GetTemplate(c.GetTmplFileName())
 	c.fromField = gc.GetNowField()
+	c.gc = gc
 }
 
 func (c *ColumnFieldEx) SetWriter(writers ...io.Writer) {
@@ -70,7 +71,7 @@ func (c *ColumnFieldEx) AsTmplPack() interface{} {
 	return &ColumnFieldExTmlPack{
 		FieldPack: &common.FieldPack{
 			Name:   c.fromField.GoName,
-			GoType: utils.MapperGoTypeName(c.fromField.Desc),
+			GoType: common.MapperGoTypeName(c.gc, c.fromField.Desc),
 		},
 		Tags: tags,
 	}

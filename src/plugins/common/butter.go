@@ -10,7 +10,6 @@ type Butter interface {
 	FromExtType() protoreflect.ExtensionType
 	WorkOn(desc protoreflect.Descriptor) bool
 	GetTmplFileName() string
-	
 	Init(gc *GenContext, value interface{})
 	SetWriter(writers ...io.Writer)
 	AsTmplPack() interface{}

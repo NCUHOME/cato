@@ -2,15 +2,17 @@
 
 package {{ .PackageName }}
 
+{{ if gt (len .Imports) 0 }}
 import (
     {{ range .Imports }}
-    "{{ . }}"
+    {{ . }}
     {{ end }}
 )
+{{ end }}
 
-type {{ .ModelName }}Model struct {
+type {{ .ModelName }} struct {
 {{ range .Fields }}
-{{ . }}
+    {{ . }}
 {{ end }}
 }
 

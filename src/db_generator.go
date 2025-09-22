@@ -29,12 +29,11 @@ func (g *DbGenerator) Generate(resp *pluginpb.CodeGeneratorResponse) *pluginpb.C
 	}
 	context := new(common.GenContext)
 	for _, file := range genOption.Files {
-		catoPackage, ok := GetCatoPackageFromFile(file.Desc)
-		if !ok {
+		fc := context.WithFile(file)
+		if fc.CatoPackage() == "" {
 			continue
 		}
-		fc := context.WithFile(file)
-		imports := GetImportPathFromFile(file)
+		imports := fc.GetImports()
 		for _, message := range file.Messages {
 			// test for single plugger
 			mc := fc.WithMessage(message)
@@ -48,7 +47,7 @@ func (g *DbGenerator) Generate(resp *pluginpb.CodeGeneratorResponse) *pluginpb.C
 			if !ok {
 				continue
 			}
-			fileName := filepath.Join(catoPackage, mp.GenerateFile())
+			fileName := filepath.Join(fc.CatoPackage(), mp.GenerateFile())
 			for _, importName := range imports {
 				_, err = io.WriteString(mp.BorrowImportsWriter(), importName)
 				if err != nil {

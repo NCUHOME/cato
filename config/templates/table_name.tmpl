@@ -1,4 +1,4 @@
-func (models *{{ .MessageTypeName }}Model) TableName() string {
+func (models *{{ .MessageTypeName }}) TableName() string {
     // {{.Comment}}
     {{ if eq .TableName ""}}
     panic("table name must impl")
