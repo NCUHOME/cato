@@ -1,1 +1,1 @@
-{{ .Name }} {{ .GoType }} `{{ range .Tags }} {{.Key}}:"{{.Name}}" {{end}}`
+{{ .Name }} {{ .GoType }} {{if gt (len .Tags) 0}}`{{ range .Tags }}. {{end}}`{{end}}

@@ -10,7 +10,8 @@ import (
 
 const (
 	TmplPath        = "templates"
-	CommonFieldTmpl = "common_tmpl"
+	CommonFieldTmpl = "common_field_tmpl"
+	CommonTagTmpl   = "common_tag_tmpl"
 )
 
 var (
@@ -29,6 +30,8 @@ var templateNames = []string{
 func init() {
 	templates[CommonFieldTmpl], _ = template.New(CommonFieldTmpl).
 		Parse(`{{ .Name }} {{ .GoType }} `)
+	templates[CommonTagTmpl], _ = template.New(CommonTagTmpl).
+		Parse(`{{range .}}{{.Key}}:"{{.Value}}" {{end}}"`)
 
 	for _, name := range templateNames {
 		path := filepath.Join(TmplPath, name)

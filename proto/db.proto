@@ -42,16 +42,21 @@ message TimeOption {
 
 message ColumnDescriptor {
   string field_type = 1;
-  string filed_name = 2;
+  string field_name = 2;
   bool nullable = 3;
   string default = 4;
   string comment = 5;
 }
 
+message JsonTransOption {
+  bool lazy_load = 1;
+  bool has_raw_field = 2;
+}
+
 message ColumnOption {
-  repeated cato.struct.FieldTag tags = 1;
-  bool json_trans = 2;
-  TimeOption time_option = 3;
-  ColumnDescriptor col_desc = 4;
-  repeated DBKey keys = 5;
+  JsonTransOption json_trans = 1;
+  TimeOption time_option = 2;
+  ColumnDescriptor col_desc = 3;
+  repeated DBKey keys = 4;
+  repeated cato.struct.FieldTag tags = 5;
 }

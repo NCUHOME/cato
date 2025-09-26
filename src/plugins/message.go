@@ -17,67 +17,87 @@ import (
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
-type MessagesPlugger struct {
+type MessageCheese struct {
 	message *protogen.Message
-	context *common.GenContext
 
-	fields  map[string]*FieldsPlugger
 	imports []*strings.Builder
 	methods []*strings.Builder
 	extra   []*strings.Builder
+	fields  []*strings.Builder
 	tmpl    *template.Template
 }
 
-type ModelsPluggerPack struct {
+type MessageCheesePack struct {
 	PackageName string
-	Imports     []string
 	ModelName   string
-	Fields      []string
-	Methods     []string
+
+	Fields  []string
+	Methods []string
+	Imports []string
 }
 
-func (mp *MessagesPlugger) LoadContext(gc *common.GenContext) {
-	mp.context = gc
-	mp.message = gc.GetNowMessage()
-	mp.fields = make(map[string]*FieldsPlugger)
+func NewMessageCheese(msg *protogen.Message) *MessageCheese {
+	mp := new(MessageCheese)
+	mp.message = msg
+	mp.fields = make([]*strings.Builder, 0)
 	mp.imports = make([]*strings.Builder, 0)
 	mp.methods = make([]*strings.Builder, 0)
 	mp.extra = make([]*strings.Builder, 0)
+	return mp
 }
 
-func (mp *MessagesPlugger) BorrowMethodsWriter() io.Writer {
+// RegisterContext because generate a file from a message, so a file-level writer for a message generates progress
+func (mp *MessageCheese) RegisterContext(gc *common.GenContext) *common.GenContext {
+	ctx := gc.WithMessage(mp.message)
+	writers := new(common.ContextWriter)
+	writers.ImportWriter = mp.borrowImportsWriter
+	writers.MethodWriter = mp.borrowMethodsWriter
+	writers.ExtraWriter = mp.borrowExtraWriter
+
+	writers.FieldWriter = mp.borrowFieldWriter
+	ctx.SetWriters(writers)
+	return ctx
+}
+
+func (mp *MessageCheese) borrowMethodsWriter() io.Writer {
 	mp.methods = append(mp.methods, new(strings.Builder))
 	return mp.methods[len(mp.methods)-1]
 }
 
-func (mp *MessagesPlugger) BorrowImportsWriter() io.Writer {
+func (mp *MessageCheese) borrowImportsWriter() io.Writer {
 	mp.imports = append(mp.imports, new(strings.Builder))
 	return mp.imports[len(mp.imports)-1]
 }
 
-func (mp *MessagesPlugger) BorrowExtraWriter() io.Writer {
+func (mp *MessageCheese) borrowExtraWriter() io.Writer {
 	mp.extra = append(mp.extra, new(strings.Builder))
 	return mp.extra[len(mp.extra)-1]
 }
 
-func (mp *MessagesPlugger) AsTmplPack() *ModelsPluggerPack {
+func (mp *MessageCheese) borrowFieldWriter() io.Writer {
+	mp.fields = append(mp.fields, new(strings.Builder))
+	return mp.fields[len(mp.fields)-1]
+}
+
+func (mp *MessageCheese) AsTmplPack(ctx *common.GenContext) *MessageCheesePack {
 	imports := make([]string, len(mp.imports))
 	for i, imp := range mp.imports {
 		imports[i] = imp.String()
 	}
-	fields := make([]string, len(mp.fields))
-	fieldsIndex := 0
-	for _, field := range mp.fields {
-		value := field.GetContent()
-		fields[fieldsIndex] = value
-		fieldsIndex++
+	// 组织namespace的imports
+	for _, importPath := range ctx.GetImports() {
+		imports = append(imports, importPath)
 	}
 	methods := make([]string, len(mp.methods))
 	for index, method := range mp.methods {
 		methods[index] = method.String()
 	}
-	return &ModelsPluggerPack{
-		PackageName: utils.GetGoImportName(mp.context.GetNowFile().GoImportPath),
+	fields := make([]string, len(mp.fields))
+	for index, field := range mp.fields {
+		fields[index] = field.String()
+	}
+	return &MessageCheesePack{
+		PackageName: utils.GetGoImportName(ctx.GetNowFile().GoImportPath),
 		Imports:     imports,
 		ModelName:   mp.message.GoIdent.GoName,
 		Fields:      fields,
@@ -85,43 +105,34 @@ func (mp *MessagesPlugger) AsTmplPack() *ModelsPluggerPack {
 	}
 }
 
-func (mp *MessagesPlugger) ParseFields() {
-	for _, field := range mp.message.Fields {
-		fp := new(FieldsPlugger)
-		fp.LoadContext(mp.context.WithField(field))
-		mp.fields[field.GoName] = fp
-	}
-}
-
-func (mp *MessagesPlugger) GetTemplateName() string {
+func (mp *MessageCheese) GetTemplateName() string {
 	return "models.tmpl"
 }
 
-func (mp *MessagesPlugger) Init(template *template.Template) {
+func (mp *MessageCheese) Init(template *template.Template) {
 	mp.tmpl = template
 }
 
-func (mp *MessagesPlugger) GenerateFile() string {
+func (mp *MessageCheese) GenerateFile() string {
 	return fmt.Sprintf("%s.cato.go", mp.outputFileName())
 }
 
-func (mp *MessagesPlugger) outputFileName() string {
+func (mp *MessageCheese) outputFileName() string {
 	patterns := utils.SplitCamelWords(mp.message.GoIdent.GoName)
 	mapper := utils.GetStringMapper(generated.FieldMapper_CATO_FIELD_MAPPER_SNAKE_CASE)
 	return mapper(patterns)
 }
 
-func (mp *MessagesPlugger) GenerateContent() string {
+func (mp *MessageCheese) GenerateContent(ctx *common.GenContext) string {
 	sw := new(strings.Builder)
-	err := mp.tmpl.Execute(sw, mp.AsTmplPack())
+	err := mp.tmpl.Execute(sw, mp.AsTmplPack(ctx))
 	if err != nil {
 		log.Fatalln("[-] models plugger exec tmpl error, ", err)
 	}
 	return sw.String()
 }
 
-func (mp *MessagesPlugger) Active() (bool, error) {
-	mp.ParseFields()
+func (mp *MessageCheese) Active(ctx *common.GenContext) (bool, error) {
 	descriptor := protodesc.ToDescriptorProto(mp.message.Desc)
 	butter := db.ChooseButter(mp.message.Desc)
 	for index := range butter {
@@ -129,17 +140,19 @@ func (mp *MessagesPlugger) Active() (bool, error) {
 			continue
 		}
 		value := proto.GetExtension(descriptor.Options, butter[index].FromExtType())
-		butter[index].Init(mp.context, value)
-		butter[index].SetWriter(mp.BorrowMethodsWriter(), mp.BorrowExtraWriter())
-		err := butter[index].Register()
+		butter[index].Init(value)
+		err := butter[index].Register(ctx)
 		if err != nil {
 			return false, err
 		}
 	}
-	for name, field := range mp.fields {
-		_, err := field.Active()
+
+	for _, field := range mp.message.Fields {
+		fp := NewFieldCheese(field)
+		fieldCtx := fp.RegisterContext(ctx)
+		_, err := fp.Active(fieldCtx)
 		if err != nil {
-			log.Fatalln("[-] cato generate field error, ", name, err)
+			return false, err
 		}
 	}
 	return true, nil

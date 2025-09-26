@@ -41,6 +41,7 @@ type GenContext struct {
 	field       *protogen.Field
 	catoPackage string
 	namespaces  map[string]*CatoImportPath
+	writers     *ContextWriter
 }
 
 func (gc *GenContext) WithFile(file *protogen.File) *GenContext {
@@ -64,6 +65,19 @@ func (gc *GenContext) WithFile(file *protogen.File) *GenContext {
 		ctx.namespaces[importPackage] = new(CatoImportPath).Init(importCatoPath)
 	}
 	return ctx
+}
+
+func (gc *GenContext) GetCatoPackage() string {
+	return gc.catoPackage
+}
+
+func (gc *GenContext) GetWriters() *ContextWriter {
+	return gc.writers
+}
+
+func (gc *GenContext) SetWriters(writers *ContextWriter) *GenContext {
+	gc.writers = writers
+	return gc
 }
 
 func (gc *GenContext) CatoPackage() string {
@@ -105,9 +119,11 @@ func (gc *GenContext) GetNowFile() *protogen.File {
 
 func (gc *GenContext) WithMessage(message *protogen.Message) *GenContext {
 	return &GenContext{
-		file:       gc.file,
-		namespaces: gc.namespaces,
-		message:    message,
+		file:        gc.file,
+		catoPackage: gc.catoPackage,
+		namespaces:  gc.namespaces,
+		writers:     gc.writers,
+		message:     message,
 	}
 }
 
@@ -117,10 +133,12 @@ func (gc *GenContext) GetNowMessage() *protogen.Message {
 
 func (gc *GenContext) WithField(field *protogen.Field) *GenContext {
 	return &GenContext{
-		file:       gc.file,
-		namespaces: gc.namespaces,
-		message:    gc.message,
-		field:      field,
+		file:        gc.file,
+		namespaces:  gc.namespaces,
+		catoPackage: gc.catoPackage,
+		message:     gc.message,
+		writers:     gc.writers,
+		field:       field,
 	}
 }
 
