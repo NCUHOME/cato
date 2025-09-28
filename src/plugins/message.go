@@ -19,12 +19,12 @@ import (
 
 type MessageCheese struct {
 	message *protogen.Message
+	tmpl    *template.Template
 
 	imports []*strings.Builder
 	methods []*strings.Builder
 	extra   []*strings.Builder
 	fields  []*strings.Builder
-	tmpl    *template.Template
 }
 
 type MessageCheesePack struct {
@@ -84,7 +84,7 @@ func (mp *MessageCheese) AsTmplPack(ctx *common.GenContext) *MessageCheesePack {
 	for i, imp := range mp.imports {
 		imports[i] = imp.String()
 	}
-	// 组织namespace的imports
+	// load namespace import path
 	for _, importPath := range ctx.GetImports() {
 		imports = append(imports, importPath)
 	}
@@ -119,7 +119,7 @@ func (mp *MessageCheese) GenerateFile() string {
 
 func (mp *MessageCheese) outputFileName() string {
 	patterns := utils.SplitCamelWords(mp.message.GoIdent.GoName)
-	mapper := utils.GetStringMapper(generated.FieldMapper_CATO_FIELD_MAPPER_SNAKE_CASE)
+	mapper := utils.GetStringsMapper(generated.FieldMapper_CATO_FIELD_MAPPER_SNAKE_CASE)
 	return mapper(patterns)
 }
 

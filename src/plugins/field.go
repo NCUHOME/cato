@@ -15,8 +15,9 @@ import (
 )
 
 type FieldCheese struct {
-	field *protogen.Field
-	tags  []*strings.Builder
+	field       *protogen.Field
+	tags        []*strings.Builder
+	DefaultTags []*common.Kv
 }
 
 type FieldCheesePack struct {

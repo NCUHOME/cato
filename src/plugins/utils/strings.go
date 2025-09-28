@@ -7,7 +7,7 @@ import (
 	"github.com/ncuhome/cato/generated"
 )
 
-func GetStringMapper(mapper generated.FieldMapper) func(s []string) string {
+func GetStringsMapper(mapper generated.FieldMapper) func(s []string) string {
 	switch mapper {
 	case generated.FieldMapper_CATO_FIELD_MAPPER_CAMEL:
 		return buildCamelWords

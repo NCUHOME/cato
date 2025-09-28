@@ -36,12 +36,14 @@ func (cip *CatoImportPath) Init(importPath string) *CatoImportPath {
 }
 
 type GenContext struct {
-	file        *protogen.File
-	message     *protogen.Message
-	field       *protogen.Field
+	file    *protogen.File
+	message *protogen.Message
+	field   *protogen.Field
+
 	catoPackage string
 	namespaces  map[string]*CatoImportPath
 	writers     *ContextWriter
+	scopeTags   []*Kv
 }
 
 func (gc *GenContext) WithFile(file *protogen.File) *GenContext {
@@ -119,11 +121,14 @@ func (gc *GenContext) GetNowFile() *protogen.File {
 
 func (gc *GenContext) WithMessage(message *protogen.Message) *GenContext {
 	return &GenContext{
-		file:        gc.file,
+		file:    gc.file,
+		message: message,
+
 		catoPackage: gc.catoPackage,
 		namespaces:  gc.namespaces,
-		writers:     gc.writers,
-		message:     message,
+
+		writers:   gc.writers,
+		scopeTags: make([]*Kv, 0),
 	}
 }
 
@@ -137,12 +142,15 @@ func (gc *GenContext) GetNowMessageTypeName() string {
 
 func (gc *GenContext) WithField(field *protogen.Field) *GenContext {
 	return &GenContext{
-		file:        gc.file,
+		file:    gc.file,
+		message: gc.message,
+		field:   field,
+
 		namespaces:  gc.namespaces,
 		catoPackage: gc.catoPackage,
-		message:     gc.message,
 		writers:     gc.writers,
-		field:       field,
+
+		scopeTags: gc.scopeTags,
 	}
 }
 

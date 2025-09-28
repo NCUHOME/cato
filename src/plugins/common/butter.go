@@ -8,7 +8,5 @@ type Butter interface {
 	FromExtType() protoreflect.ExtensionType
 	WorkOn(desc protoreflect.Descriptor) bool
 	Init(value interface{})
-
-	AsTmplPack(ctx *GenContext) interface{}
 	Register(ctx *GenContext) error
 }
