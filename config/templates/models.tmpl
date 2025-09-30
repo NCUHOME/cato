@@ -4,18 +4,18 @@ package {{ .PackageName }}
 
 {{ if gt (len .Imports) 0 }}
 import (
-    {{ range .Imports }}
+    {{- range .Imports }}
     {{ . }}
-    {{ end }}
+    {{- end }}
 )
 {{ end }}
 
 type {{ .ModelName }} struct {
-{{ range .Fields }}
+{{- range .Fields }}
     {{ . }}
-{{ end }}
+{{- end }}
 }
 
 {{range .Methods}}
-{{ . }}
+{{- . }}
 {{ end }}

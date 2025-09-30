@@ -1,19 +1,19 @@
 func (models *{{ .MessageTypeName}}) Get{{.FieldName}}() ({{.FieldType}}, error) {
-    {{if .LazyLoad}}
+    {{- if .LazyLoad}}
     if models.inner{{.FieldName}} != nil {
         return models.inner{{.FieldName}}, nil
     }
-    {{end}}
+    {{- end}}
     data := new({{.FieldTypeRaw}})
     if err := json.Unmarshal([]byte(models.{{.FieldName}}), data); err != nil {
         return nil, err
     }
-    {{if .LazyLoad}}
+    {{- if .LazyLoad}}
     models.inner{{.FieldName}} = data
     return models.inner{{.FieldName}}, nil
     {{else}}
     return data, nil
-    {{end}}
+    {{- end}}
 
 }
 
@@ -26,8 +26,8 @@ func (models *{{ .MessageTypeName}}) Set{{.FieldName}}(data {{.FieldType}}) erro
         return err
     }
     models.{{.FieldName}} = string(ds)
-    {{if .LazyLoad}}
+    {{- if .LazyLoad}}
     models.inner{{.FieldName}} = data
-    {{end}}
+    {{- end}}
     return nil
 }

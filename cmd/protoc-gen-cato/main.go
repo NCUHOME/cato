@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -23,13 +22,11 @@ func main() {
 		log.Fatalf("[-] cato unmarshal pbRequest data: %#v", err)
 	}
 	pbResponse := new(pluginpb.CodeGeneratorResponse)
-	generator := src.NewDBGenerator(pbRequest)
+	generator := src.NewCatoGenerator(pbRequest)
 	generator.Generate(pbResponse)
 	output, err := proto.Marshal(pbResponse)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshaling response: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("[-] cato marshaling response error: %#v", err)
 	}
-
-	os.Stdout.Write(output)
+	_, _ = os.Stdout.Write(output)
 }

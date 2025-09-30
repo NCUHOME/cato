@@ -1,6 +1,7 @@
 package src
 
 import (
+	"go/format"
 	"log"
 	"path/filepath"
 
@@ -17,7 +18,7 @@ type CatoGenerator struct {
 	resp *pluginpb.CodeGeneratorResponse
 }
 
-func NewDBGenerator(req *pluginpb.CodeGeneratorRequest) *CatoGenerator {
+func NewCatoGenerator(req *pluginpb.CodeGeneratorRequest) *CatoGenerator {
 	return &CatoGenerator{req: req}
 }
 
@@ -42,9 +43,14 @@ func (g *CatoGenerator) Generate(resp *pluginpb.CodeGeneratorResponse) *pluginpb
 			}
 			fileName := filepath.Join(mctx.CatoPackage(), mc.GenerateFile())
 			content := mc.GenerateContent(mctx)
+			formattedContent, err := format.Source([]byte(content))
+			if err != nil {
+				log.Fatalf("[-] cato formatted %s file content error\n", fileName)
+			}
+			ft := string(formattedContent)
 			resp.File = append(resp.File, &pluginpb.CodeGeneratorResponse_File{
 				Name:    &fileName,
-				Content: &content,
+				Content: &ft,
 			})
 		}
 	}

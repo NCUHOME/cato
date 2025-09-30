@@ -5,6 +5,9 @@ option go_package = "github.com/ncuhome/cato/generated";
 
 import "cato/proto/struct.proto";
 
+message RepoOptions {
+  string db_repo_package = 1;
+}
 
 message DbOption {
   string name = 1;

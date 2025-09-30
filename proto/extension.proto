@@ -13,6 +13,7 @@ import "cato/proto/defines.proto";
 
 extend google.protobuf.FileOptions {
   cato.defines.CatoOptions cato_opt = 50001;
+  cato.db.RepoOptions db_repo_opt = 50002;
 }
 
 extend google.protobuf.MessageOptions {
