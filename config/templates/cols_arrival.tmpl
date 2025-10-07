@@ -1,0 +1,7 @@
+func (model *{{.MessageTypeName}}) GetCol{{.FieldName}}() string {
+    return "{{.ColName}}"
+}
+
+func (model *{{.MessageTypeName}}) SetCol{{.FieldName}}(value interface{}) {
+    model.{{.FieldName}} = value.(.FieldType)
+}

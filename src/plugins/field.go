@@ -5,7 +5,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/ncuhome/cato/src/plugins/structs"
+	"github.com/ncuhome/cato/src/plugins/butter/db"
+	"github.com/ncuhome/cato/src/plugins/butter/structs"
+	"github.com/ncuhome/cato/src/plugins/cheese"
+	"github.com/ncuhome/cato/src/plugins/models"
+	"github.com/ncuhome/cato/src/plugins/models/packs"
 	"github.com/ncuhome/cato/src/plugins/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -14,46 +18,39 @@ import (
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
-	"github.com/ncuhome/cato/src/plugins/db"
 )
 
-type FieldCheese struct {
+type FieldWorker struct {
 	field       *protogen.Field
 	tags        []*strings.Builder
-	DefaultTags []*common.Kv
+	DefaultTags []*models.Kv
 }
 
-type FieldCheesePack struct {
-	*common.FieldPack
-	Tags string
-}
-
-func NewFieldCheese(field *protogen.Field) *FieldCheese {
-	return &FieldCheese{
+func NewFieldCheese(field *protogen.Field) *FieldWorker {
+	return &FieldWorker{
 		field: field,
 		tags:  make([]*strings.Builder, 0),
 	}
 }
 
-func (fp *FieldCheese) RegisterContext(gc *common.GenContext) *common.GenContext {
-	ctx := gc.WithField(fp.field)
-	writers := ctx.GetWriters()
-	writers.TagWriter = fp.borrowTagWriter
+func (fp *FieldWorker) RegisterContext(gc *common.GenContext) *common.GenContext {
+	fc := cheese.NewFieldCheese()
+	ctx := gc.WithField(fp.field, fc)
 	return ctx
 }
 
-func (fp *FieldCheese) borrowTagWriter() io.Writer {
+func (fp *FieldWorker) borrowTagWriter() io.Writer {
 	fp.tags = append(fp.tags, new(strings.Builder))
 	return fp.tags[len(fp.tags)-1]
 }
 
-func (fp *FieldCheese) AsTmplPack(ctx *common.GenContext) interface{} {
+func (fp *FieldWorker) AsTmplPack(ctx *common.GenContext) interface{} {
 	commonType := common.MapperGoTypeName(ctx, fp.field.Desc)
 	if fp.willAsJsonType() {
 		commonType = "string"
 	}
-	pack := &FieldCheesePack{
-		FieldPack: &common.FieldPack{
+	pack := &packs.FieldPack{
+		Field: &models.Field{
 			Name:   fp.field.GoName,
 			GoType: commonType,
 		},
@@ -74,11 +71,7 @@ func (fp *FieldCheese) AsTmplPack(ctx *common.GenContext) interface{} {
 	return pack
 }
 
-func (fp *FieldCheese) tmplName() string {
-	return "column_field.tmpl"
-}
-
-func (fp *FieldCheese) Active(ctx *common.GenContext) (bool, error) {
+func (fp *FieldWorker) Active(ctx *common.GenContext) (bool, error) {
 	butter := db.ChooseButter(fp.field.Desc)
 	butter = append(butter, structs.ChooseButter(fp.field.Desc)...)
 
@@ -95,7 +88,7 @@ func (fp *FieldCheese) Active(ctx *common.GenContext) (bool, error) {
 		}
 	}
 	// need register tags in ctx
-	for _, scopeTag := range ctx.GetScopeTags() {
+	for _, scopeTag := range ctx.GetNowMessageContainer().GetScopeTags() {
 		if scopeTag.KV == nil {
 			continue
 		}
@@ -106,17 +99,17 @@ func (fp *FieldCheese) Active(ctx *common.GenContext) (bool, error) {
 			return false, err
 		}
 	}
-	wr := ctx.GetWriters().FieldWriter()
+	wr := ctx.GetNowMessageContainer().BorrowFieldWriter()
 	// register into field writer
 	pack := fp.AsTmplPack(ctx)
-	err := config.GetTemplate(fp.tmplName()).Execute(wr, pack)
+	err := config.GetTemplate(config.FieldTmpl).Execute(wr, pack)
 	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
-func (fp *FieldCheese) willAsJsonType() bool {
+func (fp *FieldWorker) willAsJsonType() bool {
 	descriptor := protodesc.ToFieldDescriptorProto(fp.field.Desc)
 	if !proto.HasExtension(descriptor.Options, generated.E_ColumnOpt) {
 		return false

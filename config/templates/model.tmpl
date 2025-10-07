@@ -1,0 +1,9 @@
+type {{ .ModelName }} struct {
+{{- range .Fields }}
+    {{ . }}
+{{- end }}
+}
+
+{{range .Methods}}
+{{- . }}
+{{ end }}

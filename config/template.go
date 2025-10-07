@@ -9,9 +9,17 @@ import (
 )
 
 const (
-	TmplPath        = "templates"
-	CommonFieldTmpl = "common_field_tmpl"
-	CommonTagTmpl   = "common_tag_tmpl"
+	tmplPath = "templates"
+
+	ColArrivalTmpl  = "col_arrival.tmpl"
+	TableNameTmpl   = "table_name.tmpl"
+	TableExtendTmpl = "table_extend.tmpl"
+	TimeFormatTmpl  = "time_format.tmpl"
+	JsonTransTmpl   = "json_trans.tmpl"
+	TagTmpl         = "tag.tmpl"
+	FieldTmpl       = "field.tmpl"
+	ModelTmpl       = "model.tmpl"
+	FileTmpl        = "file.tmpl"
 )
 
 var (
@@ -22,21 +30,23 @@ var (
 )
 
 var templateNames = []string{
-	"column_field.tmpl",
-	"models.tmpl",
-	"table_name.tmpl",
-	"json_trans.tmpl",
-	"time_format.tmpl",
+
+	// todo: need treat this name as const
+
+	ColArrivalTmpl,
+	TableNameTmpl,
+	TableExtendTmpl,
+	TimeFormatTmpl,
+	JsonTransTmpl,
+	FieldTmpl,
+	TagTmpl,
+	ModelTmpl,
+	FileTmpl,
 }
 
 func init() {
-	templates[CommonFieldTmpl], _ = template.New(CommonFieldTmpl).
-		Parse(`{{ .Name }} {{ .GoType }} `)
-	templates[CommonTagTmpl], _ = template.New(CommonTagTmpl).
-		Parse(`{{range .}}{{.Key}}:"{{.Value}}"{{end}}`)
-
 	for _, name := range templateNames {
-		path := filepath.Join(TmplPath, name)
+		path := filepath.Join(tmplPath, name)
 		fs, err := templatesFs.Open(path)
 		if err != nil {
 			log.Fatalln(err)

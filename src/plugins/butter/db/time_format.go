@@ -1,17 +1,18 @@
 package db
 
 import (
-	"text/template"
 	"time"
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
+	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/models/packs"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func init() {
-	register(func() common.Butter {
+	register(func() butter.Butter {
 		return new(TimeOptionButter)
 	})
 }
@@ -19,13 +20,6 @@ func init() {
 type TimeOptionButter struct {
 	value      *generated.TimeOption
 	timeFormat string
-	tmpl       *template.Template
-}
-
-type TimeOptionButterTmplPack struct {
-	MessageTypeName string
-	FieldName       string
-	Format          string
 }
 
 func (t *TimeOptionButter) FromExtType() protoreflect.ExtensionType {
@@ -47,16 +41,7 @@ func (t *TimeOptionButter) Init(value interface{}) {
 		return
 	}
 	t.value = colOpt.TimeOption
-	t.tmpl = config.GetTemplate(t.tmplName())
 	t.timeFormat = time.RFC3339
-}
-
-func (t *TimeOptionButter) AsTmplPack(ctx *common.GenContext) interface{} {
-	return &TimeOptionButterTmplPack{
-		MessageTypeName: ctx.GetNowMessageTypeName(),
-		FieldName:       ctx.GetNowField().GoName,
-		Format:          t.timeFormat,
-	}
 }
 
 func (t *TimeOptionButter) Register(ctx *common.GenContext) error {
@@ -67,11 +52,17 @@ func (t *TimeOptionButter) Register(ctx *common.GenContext) error {
 	if timeOpt.GetTimeFormat() != "" {
 		t.timeFormat = timeOpt.GetTimeFormat()
 	}
-	writer := ctx.GetWriters()
-	err := t.tmpl.Execute(writer.MethodWriter(), t.AsTmplPack(ctx))
+	mWriter := ctx.GetNowMessageContainer().BorrowMethodsWriter()
+	pack := &packs.TimeOptionTmplPack{
+		MessageTypeName: ctx.GetNowMessageTypeName(),
+		FieldName:       ctx.GetNowField().GoName,
+		Format:          t.timeFormat,
+	}
+	tmpl := config.GetTemplate(config.TimeFormatTmpl)
+	err := tmpl.Execute(mWriter, pack)
 	if err != nil {
 		return err
 	}
-	_, err = writer.ImportWriter().Write([]byte("\"time\""))
+	_, err = ctx.GetNowMessageContainer().BorrowImportWriter().Write([]byte("\"time\""))
 	return err
 }

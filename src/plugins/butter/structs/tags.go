@@ -1,6 +1,8 @@
 package structs
 
 import (
+	"github.com/ncuhome/cato/src/plugins/butter"
+	"github.com/ncuhome/cato/src/plugins/models"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/ncuhome/cato/generated"
@@ -9,7 +11,7 @@ import (
 )
 
 func init() {
-	register(func() common.Butter {
+	register(func() butter.Butter {
 		return new(FieldTagButter)
 	})
 }
@@ -36,18 +38,17 @@ func (f *FieldTagButter) Register(ctx *common.GenContext) error {
 		return nil
 	}
 	tags := f.option.GetFieldDefaultTags()
-	result := make([]*common.Tag, len(tags))
 	// common tags will be load in message-work-on butter
 	// so when load field, default tags will be loaded
+	mc := ctx.GetNowMessageContainer()
 	for index := range tags {
-		result[index] = &common.Tag{
-			KV: &common.Kv{
+		mc.AddScopeTag(&models.Tag{
+			KV: &models.Kv{
 				Key:   tags[index].GetTagName(),
 				Value: tags[index].GetTagValue(),
 			},
 			Mapper: utils.GetWordMapper(tags[index].Mapper),
-		}
+		})
 	}
-	ctx.SetScopeTags(result)
 	return nil
 }

@@ -1,71 +1,34 @@
 package common
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/ncuhome/cato/src/plugins/cheese"
+	"github.com/ncuhome/cato/src/plugins/utils"
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/ncuhome/cato/generated"
 )
 
-func GetCatoPackageFromFile(filedesc protoreflect.FileDescriptor) (string, bool) {
-	if !proto.HasExtension(filedesc.Options(), generated.E_CatoOpt) {
-		return "", false
-	}
-	catoOptions := proto.GetExtension(filedesc.Options(), generated.E_CatoOpt).(*generated.CatoOptions)
-	return catoOptions.CatoPackage, catoOptions.CatoPackage != ""
-}
-
-type CatoImportPath struct {
-	Alias      string
-	ImportPath string
-}
-
-func (cip *CatoImportPath) Init(importPath string) *CatoImportPath {
-	cip.ImportPath = importPath
-	pattern := strings.Split(importPath, "/")
-	length := len(pattern)
-	if length <= 2 {
-		return cip
-	}
-	cip.Alias = strings.Join([]string{pattern[length-2], pattern[length-1]}, "")
-	return cip
-}
-
 type GenContext struct {
-	file    *protogen.File
-	message *protogen.Message
-	field   *protogen.Field
+	catoPackage   string
+	file          *protogen.File
+	fileContainer *cheese.FileCheese
 
-	catoPackage string
-	namespaces  map[string]*CatoImportPath
-	writers     *ContextWriter
-	scopeTags   []*Tag
+	message          *protogen.Message
+	messageContainer *cheese.MessageCheese
+
+	field          *protogen.Field
+	fieldContainer *cheese.FieldCheese
 }
 
-func (gc *GenContext) WithFile(file *protogen.File) *GenContext {
+func (gc *GenContext) WithFile(file *protogen.File, container *cheese.FileCheese) *GenContext {
 	ctx := &GenContext{
-		file:       file,
-		namespaces: make(map[string]*CatoImportPath),
+		file:          file,
+		fileContainer: container,
 	}
-	desc := file.Desc
-	catoPackage, ok := GetCatoPackageFromFile(desc)
+	catoPackage, ok := utils.GetCatoPackageFromFile(file.Desc)
 	if !ok {
 		return ctx
 	}
 	ctx.catoPackage = catoPackage
-	for index := 0; index < desc.Imports().Len(); index++ {
-		importFile := desc.Imports().Get(index)
-		importPackage := string(importFile.FileDescriptor.Package())
-		importCatoPath, ok := GetCatoPackageFromFile(importFile.FileDescriptor)
-		if !ok {
-			continue
-		}
-		ctx.namespaces[importPackage] = new(CatoImportPath).Init(importCatoPath)
-	}
 	return ctx
 }
 
@@ -73,41 +36,12 @@ func (gc *GenContext) GetCatoPackage() string {
 	return gc.catoPackage
 }
 
-func (gc *GenContext) GetWriters() *ContextWriter {
-	return gc.writers
-}
-
-func (gc *GenContext) SetWriters(writers *ContextWriter) *GenContext {
-	gc.writers = writers
-	return gc
-}
-
-func (gc *GenContext) SetScopeTags(tags []*Tag) {
-	gc.scopeTags = tags
-}
-
-func (gc *GenContext) GetScopeTags() []*Tag {
-	return gc.scopeTags
+func (gc *GenContext) GetFilePackage() string {
+	return utils.GetGoImportName(gc.GetNowFile().GoImportPath)
 }
 
 func (gc *GenContext) CatoPackage() string {
 	return gc.catoPackage
-}
-
-func (gc *GenContext) EmptyNamespace() bool {
-	return len(gc.namespaces) == 0
-}
-
-func (gc *GenContext) GetImports() []string {
-	imports, index := make([]string, len(gc.namespaces)), 0
-	for _, v := range gc.namespaces {
-		value := fmt.Sprintf("\"%s\"", v.ImportPath)
-		if v.Alias != "" {
-			value = fmt.Sprintf("%s \"%s\"", v.Alias, v.ImportPath)
-		}
-		imports[index] = value
-	}
-	return imports
 }
 
 func (gc *GenContext) GetImportPathAlias(desc protoreflect.MessageDescriptor) string {
@@ -116,27 +50,24 @@ func (gc *GenContext) GetImportPathAlias(desc protoreflect.MessageDescriptor) st
 	if parent == current {
 		return ""
 	}
-	v, ok := gc.namespaces[string(parent)]
-	if !ok {
-		return ""
-	}
-	return v.Alias
+	return gc.fileContainer.GetImportPathAlias(string(parent))
 }
 
 func (gc *GenContext) GetNowFile() *protogen.File {
 	return gc.file
 }
 
-func (gc *GenContext) WithMessage(message *protogen.Message) *GenContext {
+func (gc *GenContext) GetNowFileContainer() *cheese.FileCheese {
+	return gc.fileContainer
+}
+
+func (gc *GenContext) WithMessage(message *protogen.Message, container *cheese.MessageCheese) *GenContext {
 	return &GenContext{
-		file:    gc.file,
-		message: message,
-
-		catoPackage: gc.catoPackage,
-		namespaces:  gc.namespaces,
-
-		writers:   gc.writers,
-		scopeTags: make([]*Tag, 0),
+		catoPackage:      gc.catoPackage,
+		file:             gc.file,
+		fileContainer:    gc.fileContainer,
+		message:          message,
+		messageContainer: container,
 	}
 }
 
@@ -144,24 +75,30 @@ func (gc *GenContext) GetNowMessage() *protogen.Message {
 	return gc.message
 }
 
+func (gc *GenContext) GetNowMessageContainer() *cheese.MessageCheese {
+	return gc.messageContainer
+}
+
 func (gc *GenContext) GetNowMessageTypeName() string {
 	return gc.GetNowMessage().GoIdent.GoName
 }
 
-func (gc *GenContext) WithField(field *protogen.Field) *GenContext {
+func (gc *GenContext) WithField(field *protogen.Field, container *cheese.FieldCheese) *GenContext {
 	return &GenContext{
-		file:    gc.file,
-		message: gc.message,
-		field:   field,
-
-		namespaces:  gc.namespaces,
-		catoPackage: gc.catoPackage,
-		writers:     gc.writers,
-
-		scopeTags: gc.scopeTags,
+		catoPackage:      gc.catoPackage,
+		file:             gc.file,
+		fileContainer:    gc.fileContainer,
+		message:          gc.message,
+		messageContainer: gc.messageContainer,
+		field:            field,
+		fieldContainer:   container,
 	}
 }
 
 func (gc *GenContext) GetNowField() *protogen.Field {
 	return gc.field
+}
+
+func (gc *GenContext) GetNowFieldContainer() *cheese.FieldCheese {
+	return gc.fieldContainer
 }

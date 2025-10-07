@@ -1,9 +1,8 @@
 package plugins
 
 import (
-	"google.golang.org/protobuf/compiler/protogen"
-
 	"github.com/ncuhome/cato/src/plugins/common"
+	"google.golang.org/protobuf/compiler/protogen"
 )
 
 type FileCheese struct {
