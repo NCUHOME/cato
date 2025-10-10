@@ -2,6 +2,7 @@ package cheese
 
 import (
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/ncuhome/cato/src/plugins/models"
@@ -153,6 +154,9 @@ func (mc *MessageCheese) GetScopeTags() []*models.Tag {
 		tags[index] = tag
 		index++
 	}
+	sort.Slice(tags, func(i, j int) bool {
+		return tags[i].KV.Key < tags[j].KV.Key
+	})
 	return tags
 }
 
@@ -162,6 +166,9 @@ func (mc *MessageCheese) GetScopeCols() []*models.Col {
 		cols[index] = col
 		index++
 	}
+	sort.Slice(cols, func(i, j int) bool {
+		return cols[i].Name < cols[j].Name
+	})
 	return cols
 }
 
@@ -171,5 +178,8 @@ func (mc *MessageCheese) GetScopeKeys() []*models.Key {
 		keys[index] = key
 		index++
 	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].KeyName < keys[j].KeyName
+	})
 	return keys
 }
