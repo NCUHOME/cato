@@ -1,4 +1,4 @@
-package cheese
+package tray
 
 import (
 	"io"
@@ -8,7 +8,7 @@ import (
 	"github.com/ncuhome/cato/src/plugins/models"
 )
 
-type MessageCheese struct {
+type MessageTray struct {
 	methods []*strings.Builder
 	fields  []*strings.Builder
 	extra   []*strings.Builder
@@ -21,8 +21,8 @@ type MessageCheese struct {
 	scopeKeys map[string]*models.Key
 }
 
-func NewMessageCheese() *MessageCheese {
-	return &MessageCheese{
+func NewMessageTray() *MessageTray {
+	return &MessageTray{
 		methods:   make([]*strings.Builder, 0),
 		fields:    make([]*strings.Builder, 0),
 		extra:     make([]*strings.Builder, 0),
@@ -35,12 +35,12 @@ func NewMessageCheese() *MessageCheese {
 	}
 }
 
-func (mc *MessageCheese) BorrowImportWriter() io.Writer {
+func (mc *MessageTray) BorrowImportWriter() io.Writer {
 	mc.imports = append(mc.imports, &strings.Builder{})
 	return mc.imports[len(mc.imports)-1]
 }
 
-func (mc *MessageCheese) GetImports() []string {
+func (mc *MessageTray) GetImports() []string {
 	ss := make([]string, len(mc.imports))
 	for index := range mc.imports {
 		ss[index] = mc.imports[index].String()
@@ -48,12 +48,12 @@ func (mc *MessageCheese) GetImports() []string {
 	return ss
 }
 
-func (mc *MessageCheese) BorrowMethodsWriter() io.Writer {
+func (mc *MessageTray) BorrowMethodsWriter() io.Writer {
 	mc.methods = append(mc.methods, new(strings.Builder))
 	return mc.methods[len(mc.methods)-1]
 }
 
-func (mc *MessageCheese) GetMethods() []string {
+func (mc *MessageTray) GetMethods() []string {
 	ss := make([]string, len(mc.methods))
 	for index := range mc.methods {
 		ss[index] = mc.methods[index].String()
@@ -61,12 +61,12 @@ func (mc *MessageCheese) GetMethods() []string {
 	return ss
 }
 
-func (mc *MessageCheese) BorrowExtraWriter() io.Writer {
+func (mc *MessageTray) BorrowExtraWriter() io.Writer {
 	mc.extra = append(mc.extra, new(strings.Builder))
 	return mc.extra[len(mc.extra)-1]
 }
 
-func (mc *MessageCheese) GetExtra() []string {
+func (mc *MessageTray) GetExtra() []string {
 	ss := make([]string, len(mc.extra))
 	for index := range mc.extra {
 		ss[index] = mc.extra[index].String()
@@ -74,17 +74,17 @@ func (mc *MessageCheese) GetExtra() []string {
 	return ss
 }
 
-func (mc *MessageCheese) BorrowRepoWriter() io.Writer {
+func (mc *MessageTray) BorrowRepoWriter() io.Writer {
 	mc.repo = append(mc.repo, new(strings.Builder))
 	return mc.repo[len(mc.repo)-1]
 }
 
-func (mc *MessageCheese) BorrowRdbWriter() io.Writer {
+func (mc *MessageTray) BorrowRdbWriter() io.Writer {
 	mc.rdb = append(mc.rdb, new(strings.Builder))
 	return mc.rdb[len(mc.rdb)-1]
 }
 
-func (mc *MessageCheese) GetRepo() []string {
+func (mc *MessageTray) GetRepo() []string {
 	ss := make([]string, len(mc.repo))
 	for index := range mc.repo {
 		ss[index] = mc.repo[index].String()
@@ -92,7 +92,7 @@ func (mc *MessageCheese) GetRepo() []string {
 	return ss
 }
 
-func (mc *MessageCheese) GetRdb() []string {
+func (mc *MessageTray) GetRdb() []string {
 	ss := make([]string, len(mc.rdb))
 	for index := range mc.rdb {
 		ss[index] = mc.rdb[index].String()
@@ -100,12 +100,12 @@ func (mc *MessageCheese) GetRdb() []string {
 	return ss
 }
 
-func (mc *MessageCheese) BorrowFieldWriter() io.Writer {
+func (mc *MessageTray) BorrowFieldWriter() io.Writer {
 	mc.fields = append(mc.fields, new(strings.Builder))
 	return mc.fields[len(mc.fields)-1]
 }
 
-func (mc *MessageCheese) GetField() []string {
+func (mc *MessageTray) GetField() []string {
 	ss := make([]string, len(mc.fields))
 	for index := range mc.fields {
 		ss[index] = mc.fields[index].String()
@@ -113,7 +113,7 @@ func (mc *MessageCheese) GetField() []string {
 	return ss
 }
 
-func (mc *MessageCheese) AddScopeCol(col *models.Col) {
+func (mc *MessageTray) AddScopeCol(col *models.Col) {
 	if col == nil {
 		return
 	}
@@ -121,7 +121,7 @@ func (mc *MessageCheese) AddScopeCol(col *models.Col) {
 	mc.scopeCols[colName] = col
 }
 
-func (mc *MessageCheese) SetScopeColType(fieldName string, colType string) {
+func (mc *MessageTray) SetScopeColType(fieldName string, colType string) {
 	for _, col := range mc.scopeCols {
 		if col.Name == fieldName {
 			col.GoType = colType
@@ -129,14 +129,14 @@ func (mc *MessageCheese) SetScopeColType(fieldName string, colType string) {
 	}
 }
 
-func (mc *MessageCheese) AddScopeTag(tag *models.Tag) {
+func (mc *MessageTray) AddScopeTag(tag *models.Tag) {
 	if tag == nil || tag.KV == nil {
 		return
 	}
 	mc.scopeTags[tag.KV.Key] = tag
 }
 
-func (mc *MessageCheese) AddScopeKey(key *models.Key) {
+func (mc *MessageTray) AddScopeKey(key *models.Key) {
 	if key == nil || len(key.Fields) == 0 {
 		return
 	}
@@ -148,7 +148,7 @@ func (mc *MessageCheese) AddScopeKey(key *models.Key) {
 	}
 }
 
-func (mc *MessageCheese) GetScopeTags() []*models.Tag {
+func (mc *MessageTray) GetScopeTags() []*models.Tag {
 	tags, index := make([]*models.Tag, len(mc.scopeTags)), 0
 	for _, tag := range mc.scopeTags {
 		tags[index] = tag
@@ -160,7 +160,7 @@ func (mc *MessageCheese) GetScopeTags() []*models.Tag {
 	return tags
 }
 
-func (mc *MessageCheese) GetScopeCols() []*models.Col {
+func (mc *MessageTray) GetScopeCols() []*models.Col {
 	cols, index := make([]*models.Col, len(mc.scopeCols)), 0
 	for _, col := range mc.scopeCols {
 		cols[index] = col
@@ -172,7 +172,7 @@ func (mc *MessageCheese) GetScopeCols() []*models.Col {
 	return cols
 }
 
-func (mc *MessageCheese) GetScopeKeys() []*models.Key {
+func (mc *MessageTray) GetScopeKeys() []*models.Key {
 	keys, index := make([]*models.Key, len(mc.scopeKeys)), 0
 	for _, key := range mc.scopeKeys {
 		keys[index] = key

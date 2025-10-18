@@ -1,40 +1,46 @@
-package plugins
+package ware
 
 import (
 	"fmt"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/ncuhome/cato/config"
-	"github.com/ncuhome/cato/src/plugins/butter"
-	"github.com/ncuhome/cato/src/plugins/cheese"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
+	"github.com/ncuhome/cato/src/plugins/tray"
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
-type FieldWorker struct {
+type FieldWare struct {
 	field       *protogen.Field
 	DefaultTags []*models.Kv
 }
 
-func NewFieldCheese(field *protogen.Field) *FieldWorker {
-	return &FieldWorker{
+func NewFieldWare(field *protogen.Field) *FieldWare {
+	return &FieldWare{
 		field: field,
 	}
 }
 
-func (fw *FieldWorker) RegisterContext(gc *common.GenContext) *common.GenContext {
-	fc := cheese.NewFieldCheese()
+func (fw *FieldWare) GetDescriptor() protoreflect.Descriptor {
+	return fw.field.Desc
+}
+
+func (fw *FieldWare) GetSubWares() []WorkWare {
+	return []WorkWare{}
+}
+
+func (fw *FieldWare) RegisterContext(gc *common.GenContext) *common.GenContext {
+	fc := tray.NewFieldTray()
 	ctx := gc.WithField(fw.field, fc)
 	return ctx
 }
 
-func (fw *FieldWorker) AsTmplPack(fieldType string, tags []string) *packs.FieldPack {
+func (fw *FieldWare) asTmplPack(fieldType string, tags []string) *packs.FieldPack {
 	pack := &packs.FieldPack{
 		Field: &models.Field{
 			Name:   fw.field.GoName,
@@ -58,19 +64,10 @@ func (fw *FieldWorker) AsTmplPack(fieldType string, tags []string) *packs.FieldP
 	return pack
 }
 
-func (fw *FieldWorker) Active(ctx *common.GenContext) (bool, error) {
-	butters := butter.ChooseButter(fw.field.Desc)
-	descriptor := protodesc.ToFieldDescriptorProto(fw.field.Desc)
-	for index := range butters {
-		if !proto.HasExtension(descriptor.Options, butters[index].FromExtType()) {
-			continue
-		}
-		value := proto.GetExtension(descriptor.Options, butters[index].FromExtType())
-		butters[index].Init(value)
-		err := butters[index].Register(ctx)
-		if err != nil {
-			return false, err
-		}
+func (fw *FieldWare) Active(ctx *common.GenContext) (bool, error) {
+	ok, err := active(ctx, fw)
+	if !ok || err != nil {
+		return false, err
 	}
 	fdc := ctx.GetNowFieldContainer()
 	// need register tags in ctx
@@ -88,16 +85,16 @@ func (fw *FieldWorker) Active(ctx *common.GenContext) (bool, error) {
 	return true, nil
 }
 
-func (fw *FieldWorker) Complete(ctx *common.GenContext) error {
+func (fw *FieldWare) Complete(ctx *common.GenContext) error {
 	wr := ctx.GetNowMessageContainer().BorrowFieldWriter()
 	// register into field writer
-	fieldType := common.MapperGoTypeName(ctx, fw.field.Desc)
+	fieldType := common.MapperGoTypeNameFromField(ctx, fw.field.Desc)
 	if ctx.GetNowFieldContainer().IsJsonTrans() {
 		fieldType = "string"
 		mc := ctx.GetNowMessageContainer()
 		mc.SetScopeColType(fw.field.GoName, fieldType)
 	}
 	fdc := ctx.GetNowFieldContainer()
-	pack := fw.AsTmplPack(fieldType, fdc.GetTags())
+	pack := fw.asTmplPack(fieldType, fdc.GetTags())
 	return config.GetTemplate(config.FieldTmpl).Execute(wr, pack)
 }

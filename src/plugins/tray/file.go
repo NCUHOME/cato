@@ -1,4 +1,4 @@
-package cheese
+package tray
 
 import (
 	"google.golang.org/protobuf/compiler/protogen"
@@ -7,7 +7,7 @@ import (
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
-type FileCheese struct {
+type FileTray struct {
 	imports map[string]*models.Import
 	// todo optimize as repo map
 	catoPackage    *models.Import
@@ -16,8 +16,8 @@ type FileCheese struct {
 	rdbRepoPackage *models.Import
 }
 
-func NewFileCheese(file *protogen.File) *FileCheese {
-	cheese := new(FileCheese)
+func NewFileTray(file *protogen.File) *FileTray {
+	cheese := new(FileTray)
 	cheese.imports = make(map[string]*models.Import)
 
 	desc := file.Desc
@@ -33,7 +33,7 @@ func NewFileCheese(file *protogen.File) *FileCheese {
 	return cheese
 }
 
-func (fc *FileCheese) GetImportPathAlias(path string) string {
+func (fc *FileTray) GetImportPathAlias(path string) string {
 	v, ok := fc.imports[path]
 	if !ok {
 		return ""
@@ -41,7 +41,7 @@ func (fc *FileCheese) GetImportPathAlias(path string) string {
 	return v.Alias
 }
 
-func (fc *FileCheese) GetImports() []string {
+func (fc *FileTray) GetImports() []string {
 	imports, index := make([]string, len(fc.imports)), 0
 	for _, v := range fc.imports {
 		imports[index] = v.GetPath()
@@ -50,38 +50,38 @@ func (fc *FileCheese) GetImports() []string {
 	return imports
 }
 
-func (fc *FileCheese) SetCatoPackage(packagePath string) {
+func (fc *FileTray) SetCatoPackage(packagePath string) {
 	i := new(models.Import).Init(packagePath)
 	fc.catoPackage = i
 }
 
-func (fc *FileCheese) GetCatoPackage() *models.Import {
+func (fc *FileTray) GetCatoPackage() *models.Import {
 	return fc.catoPackage
 }
 
-func (fc *FileCheese) SetCatoExtPackage(packagePath string) {
+func (fc *FileTray) SetCatoExtPackage(packagePath string) {
 	i := new(models.Import).Init(packagePath)
 	fc.catoExtPackage = i
 }
 
-func (fc *FileCheese) GetCatoExtPackage() *models.Import {
+func (fc *FileTray) GetCatoExtPackage() *models.Import {
 	return fc.catoExtPackage
 }
 
-func (fc *FileCheese) SetRepoPackage(packagePath string) {
+func (fc *FileTray) SetRepoPackage(packagePath string) {
 	i := new(models.Import).Init(packagePath)
 	fc.repoPackage = i
 }
 
-func (fc *FileCheese) GetRepoPackage() *models.Import {
+func (fc *FileTray) GetRepoPackage() *models.Import {
 	return fc.repoPackage
 }
 
-func (fc *FileCheese) SetRdbRepoPackage(packagePath string) {
+func (fc *FileTray) SetRdbRepoPackage(packagePath string) {
 	i := new(models.Import).Init(packagePath)
 	fc.rdbRepoPackage = i
 }
 
-func (fc *FileCheese) GetRdbRepoPackage() *models.Import {
+func (fc *FileTray) GetRdbRepoPackage() *models.Import {
 	return fc.rdbRepoPackage
 }

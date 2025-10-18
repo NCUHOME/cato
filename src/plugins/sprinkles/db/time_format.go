@@ -7,36 +7,36 @@ import (
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(TimeOptionButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(TimeOptionSprinkle)
 	})
 }
 
-type TimeOptionButter struct {
+type TimeOptionSprinkle struct {
 	value      *generated.TimeOption
 	timeFormat string
 }
 
-func (t *TimeOptionButter) FromExtType() protoreflect.ExtensionType {
+func (t *TimeOptionSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_ColumnOpt
 }
 
-func (t *TimeOptionButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (t *TimeOptionSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.FieldDescriptor)
 	return ok
 }
 
-func (t *TimeOptionButter) tmplName() string {
+func (t *TimeOptionSprinkle) tmplName() string {
 	return "time_format.tmpl"
 }
 
-func (t *TimeOptionButter) Init(value interface{}) {
+func (t *TimeOptionSprinkle) Init(value interface{}) {
 	colOpt, ok := value.(*generated.ColumnOption)
 	if !ok {
 		return
@@ -45,7 +45,7 @@ func (t *TimeOptionButter) Init(value interface{}) {
 	t.timeFormat = time.RFC3339
 }
 
-func (t *TimeOptionButter) Register(ctx *common.GenContext) error {
+func (t *TimeOptionSprinkle) Register(ctx *common.GenContext) error {
 	if t.value == nil {
 		return nil
 	}

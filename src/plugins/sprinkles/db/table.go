@@ -5,8 +5,8 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
@@ -14,20 +14,20 @@ import (
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(TableBasicButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(TableBasicSprinkle)
 	})
 }
 
-type TableBasicButter struct {
+type TableBasicSprinkle struct {
 	value *generated.TableOption
 }
 
-func (t *TableBasicButter) extendTmplName() string {
+func (t *TableBasicSprinkle) extendTmplName() string {
 	return "table_extend.tmpl"
 }
 
-func (t *TableBasicButter) Init(value interface{}) {
+func (t *TableBasicSprinkle) Init(value interface{}) {
 	exValue, ok := value.(*generated.TableOption)
 	if !ok {
 		log.Fatalf("[-] can not convert %#v to TableOption", value)
@@ -36,16 +36,16 @@ func (t *TableBasicButter) Init(value interface{}) {
 	t.value = exValue
 }
 
-func (t *TableBasicButter) FromExtType() protoreflect.ExtensionType {
+func (t *TableBasicSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_TableOpt
 }
 
-func (t *TableBasicButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (t *TableBasicSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.MessageDescriptor)
 	return ok
 }
 
-func (t *TableBasicButter) Register(ctx *common.GenContext) error {
+func (t *TableBasicSprinkle) Register(ctx *common.GenContext) error {
 	if t.value == nil {
 		return nil
 	}

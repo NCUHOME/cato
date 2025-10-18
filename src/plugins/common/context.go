@@ -4,21 +4,27 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/ncuhome/cato/src/plugins/cheese"
+	"github.com/ncuhome/cato/src/plugins/tray"
 )
 
 type GenContext struct {
 	file          *protogen.File
-	fileContainer *cheese.FileCheese
+	fileContainer *tray.FileTray
 
 	message          *protogen.Message
-	messageContainer *cheese.MessageCheese
+	messageContainer *tray.MessageTray
 
 	field          *protogen.Field
-	fieldContainer *cheese.FieldCheese
+	fieldContainer *tray.FieldTray
+
+	service          *protogen.Service
+	serviceContainer *tray.ServiceTray
+
+	method          *protogen.Method
+	methodContainer *tray.MethodTray
 }
 
-func (gc *GenContext) WithFile(file *protogen.File, container *cheese.FileCheese) *GenContext {
+func (gc *GenContext) WithFile(file *protogen.File, container *tray.FileTray) *GenContext {
 	ctx := &GenContext{
 		file:          file,
 		fileContainer: container,
@@ -43,11 +49,11 @@ func (gc *GenContext) GetNowFile() *protogen.File {
 	return gc.file
 }
 
-func (gc *GenContext) GetNowFileContainer() *cheese.FileCheese {
+func (gc *GenContext) GetNowFileContainer() *tray.FileTray {
 	return gc.fileContainer
 }
 
-func (gc *GenContext) WithMessage(message *protogen.Message, container *cheese.MessageCheese) *GenContext {
+func (gc *GenContext) WithMessage(message *protogen.Message, container *tray.MessageTray) *GenContext {
 	return &GenContext{
 		file:             gc.file,
 		fileContainer:    gc.fileContainer,
@@ -60,7 +66,7 @@ func (gc *GenContext) GetNowMessage() *protogen.Message {
 	return gc.message
 }
 
-func (gc *GenContext) GetNowMessageContainer() *cheese.MessageCheese {
+func (gc *GenContext) GetNowMessageContainer() *tray.MessageTray {
 	return gc.messageContainer
 }
 
@@ -68,7 +74,7 @@ func (gc *GenContext) GetNowMessageTypeName() string {
 	return gc.GetNowMessage().GoIdent.GoName
 }
 
-func (gc *GenContext) WithField(field *protogen.Field, container *cheese.FieldCheese) *GenContext {
+func (gc *GenContext) WithField(field *protogen.Field, container *tray.FieldTray) *GenContext {
 	return &GenContext{
 		file:             gc.file,
 		fileContainer:    gc.fileContainer,
@@ -83,6 +89,42 @@ func (gc *GenContext) GetNowField() *protogen.Field {
 	return gc.field
 }
 
-func (gc *GenContext) GetNowFieldContainer() *cheese.FieldCheese {
+func (gc *GenContext) GetNowFieldContainer() *tray.FieldTray {
 	return gc.fieldContainer
+}
+
+func (gc *GenContext) WithService(service *protogen.Service, container *tray.ServiceTray) *GenContext {
+	return &GenContext{
+		file:             gc.file,
+		fileContainer:    gc.fileContainer,
+		service:          service,
+		serviceContainer: container,
+	}
+}
+
+func (gc *GenContext) GetNowService() *protogen.Service {
+	return gc.service
+}
+
+func (gc *GenContext) GetNowServiceContainer() *tray.ServiceTray {
+	return gc.serviceContainer
+}
+
+func (gc *GenContext) WithMethod(method *protogen.Method, container *tray.MethodTray) *GenContext {
+	return &GenContext{
+		file:             gc.file,
+		fileContainer:    gc.fileContainer,
+		service:          gc.service,
+		serviceContainer: gc.serviceContainer,
+		method:           method,
+		methodContainer:  container,
+	}
+}
+
+func (gc *GenContext) GetNowMethod() *protogen.Method {
+	return gc.method
+}
+
+func (gc *GenContext) GetNowMethodContainer() *tray.MethodTray {
+	return gc.methodContainer
 }

@@ -4,30 +4,30 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/ncuhome/cato/generated"
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(PackageButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(PackageSprinkle)
 	})
 }
 
-type PackageButter struct {
+type PackageSprinkle struct {
 	value *generated.CatoOptions
 }
 
-func (p *PackageButter) FromExtType() protoreflect.ExtensionType {
+func (p *PackageSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_CatoOpt
 }
 
-func (p *PackageButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (p *PackageSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.FileDescriptor)
 	return ok
 }
 
-func (p *PackageButter) Init(value interface{}) {
+func (p *PackageSprinkle) Init(value interface{}) {
 	_, ok := value.(*generated.CatoOptions)
 	if !ok {
 		return
@@ -35,7 +35,7 @@ func (p *PackageButter) Init(value interface{}) {
 	p.value = value.(*generated.CatoOptions)
 }
 
-func (p *PackageButter) Register(ctx *common.GenContext) error {
+func (p *PackageSprinkle) Register(ctx *common.GenContext) error {
 	fc := ctx.GetNowFileContainer()
 	if p.value.GetCatoPackage() != "" {
 		fc.SetCatoPackage(p.value.GetCatoPackage())

@@ -1,27 +1,27 @@
-package cheese
+package tray
 
 import (
 	"io"
 	"strings"
 )
 
-type FieldCheese struct {
+type FieldTray struct {
 	tags      []*strings.Builder
 	jsonTrans bool
 }
 
-func NewFieldCheese() *FieldCheese {
-	cheese := &FieldCheese{}
+func NewFieldTray() *FieldTray {
+	cheese := &FieldTray{}
 	cheese.tags = make([]*strings.Builder, 0)
 	return cheese
 }
 
-func (fp *FieldCheese) BorrowTagWriter() io.Writer {
+func (fp *FieldTray) BorrowTagWriter() io.Writer {
 	fp.tags = append(fp.tags, new(strings.Builder))
 	return fp.tags[len(fp.tags)-1]
 }
 
-func (fp *FieldCheese) GetTags() []string {
+func (fp *FieldTray) GetTags() []string {
 	data := make([]string, len(fp.tags))
 	for i, tag := range fp.tags {
 		data[i] = tag.String()
@@ -29,10 +29,10 @@ func (fp *FieldCheese) GetTags() []string {
 	return data
 }
 
-func (fp *FieldCheese) SetJsonTrans(b bool) {
+func (fp *FieldTray) SetJsonTrans(b bool) {
 	fp.jsonTrans = b
 }
 
-func (fp *FieldCheese) IsJsonTrans() bool {
+func (fp *FieldTray) IsJsonTrans() bool {
 	return fp.jsonTrans
 }

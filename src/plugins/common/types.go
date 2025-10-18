@@ -7,20 +7,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func MapperGoTypeName(ctx *GenContext, field protoreflect.FieldDescriptor) string {
+func MapperGoTypeNameFromField(ctx *GenContext, field protoreflect.FieldDescriptor) string {
 	switch field.Kind() {
 	case protoreflect.MessageKind:
 		if field.IsMap() {
-			keyType := MapperGoTypeName(ctx, field.MapKey())
-			valueType := MapperGoTypeName(ctx, field.MapValue())
+			keyType := MapperGoTypeNameFromField(ctx, field.MapKey())
+			valueType := MapperGoTypeNameFromField(ctx, field.MapValue())
 			return fmt.Sprintf("map[%s][%s]", keyType, valueType)
 		}
-		messageDesc := field.Message().(protoreflect.MessageDescriptor)
-		typeName := string(messageDesc.Name())
-		alias := ctx.GetImportPathAlias(messageDesc)
-		if alias != "" {
-			typeName = fmt.Sprintf("%s.%s", alias, typeName)
-		}
+		typeName := MapperGoTypeNameFromMessage(ctx, field.Message().(protoreflect.MessageDescriptor))
 		if field.IsList() {
 			return fmt.Sprintf("[]*%s", typeName)
 		}
@@ -31,6 +26,21 @@ func MapperGoTypeName(ctx *GenContext, field protoreflect.FieldDescriptor) strin
 	default:
 		return field.Kind().String()
 	}
+}
+
+// todo: need also return type package name
+func MapperGoTypeNameFromMessage(ctx *GenContext, messageDesc protoreflect.MessageDescriptor) string {
+	if messageDesc.IsMapEntry() {
+		keyType := MapperGoTypeNameFromField(ctx, messageDesc.Fields().Get(0))
+		valueType := MapperGoTypeNameFromField(ctx, messageDesc.Fields().Get(1))
+		return fmt.Sprintf("map[%s]%s", keyType, valueType)
+	}
+	typeName := string(messageDesc.Name())
+	alias := ctx.GetImportPathAlias(messageDesc)
+	if alias != "" {
+		typeName = fmt.Sprintf("%s.%s", alias, typeName)
+	}
+	return fmt.Sprintf("*%s", typeName)
 }
 
 func UnwrapPointType(typeRaw string) string {

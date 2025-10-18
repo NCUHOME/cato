@@ -10,10 +10,10 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 
-	"github.com/ncuhome/cato/src/plugins"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/flags"
 	"github.com/ncuhome/cato/src/plugins/models"
+	"github.com/ncuhome/cato/src/plugins/ware"
 )
 
 type CatoGenerator struct {
@@ -38,7 +38,7 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 	}
 	respFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0)
 	for _, file := range genOption.Files {
-		fc := plugins.NewFileWorker(file)
+		fc := ware.NewFileWare(file)
 		ctx := fc.RegisterContext(new(common.GenContext))
 		_, err = fc.Active(ctx)
 		if err != nil {
@@ -46,9 +46,10 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 		}
 
 		files := make([]*models.GenerateFileDesc, 0)
-		for _, message := range file.Messages {
-			// init message scope cheese
-			mc := plugins.NewMessageWorker(message)
+		allMessages := g.loadAllMessages(file.Messages)
+		for _, message := range allMessages {
+			// init message scope tray
+			mc := ware.NewMessageWare(message)
 			mctx := mc.RegisterContext(ctx)
 			ok, err := mc.Active(mctx)
 			if err != nil || !ok {
@@ -96,4 +97,19 @@ func (g *CatoGenerator) outputContent(filename, content string) *pluginpb.CodeGe
 		Name:    &filename,
 		Content: &formatted,
 	}
+}
+
+// loadAllMessages will load all messages include nested from parent messages
+func (g *CatoGenerator) loadAllMessages(parents []*protogen.Message) []*protogen.Message {
+	if len(parents) == 0 {
+		return make([]*protogen.Message, 0)
+	}
+	results := make([]*protogen.Message, 0)
+	// first load self
+	results = append(results, parents...)
+	for _, message := range parents {
+		// load message children
+		results = append(results, g.loadAllMessages(message.Messages)...)
+	}
+	return results
 }

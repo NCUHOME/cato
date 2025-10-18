@@ -1,14 +1,15 @@
 syntax = "proto3";
 
 package cato.http;
+
 option go_package = "github.com/ncuhome/cato/generated";
 
 
+
 message RouterOptions {
-  string comment = 1;
-  string router = 2;
-  string content_type = 3;
-  bool as_http_api = 4;
+  string router = 1;
+  string content_type = 2;
+  string method = 3;
 }
 
 message HttpOptions {

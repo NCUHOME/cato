@@ -4,31 +4,31 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/ncuhome/cato/generated"
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(FieldKeysButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(FieldKeysSprinkle)
 	})
 }
 
-type FieldKeysButter struct {
+type FieldKeysSprinkle struct {
 	values []*generated.DBKey
 }
 
-func (f *FieldKeysButter) FromExtType() protoreflect.ExtensionType {
+func (f *FieldKeysSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_ColumnOpt
 }
 
-func (f *FieldKeysButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (f *FieldKeysSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.FieldDescriptor)
 	return ok
 }
 
-func (f *FieldKeysButter) Init(value interface{}) {
+func (f *FieldKeysSprinkle) Init(value interface{}) {
 	v, ok := value.(*generated.ColumnOption)
 	if !ok {
 		return
@@ -36,10 +36,10 @@ func (f *FieldKeysButter) Init(value interface{}) {
 	f.values = v.GetKeys()
 }
 
-func (f *FieldKeysButter) Register(ctx *common.GenContext) error {
+func (f *FieldKeysSprinkle) Register(ctx *common.GenContext) error {
 	nowField := ctx.GetNowField()
 	fieldName := nowField.GoName
-	fieldType := common.MapperGoTypeName(ctx, nowField.Desc)
+	fieldType := common.MapperGoTypeNameFromField(ctx, nowField.Desc)
 	field := &models.Field{
 		Name:   fieldName,
 		GoType: fieldType,

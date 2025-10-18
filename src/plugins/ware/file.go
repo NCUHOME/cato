@@ -1,35 +1,35 @@
-package plugins
+package ware
 
 import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 
-	"github.com/ncuhome/cato/src/plugins/butter"
-	"github.com/ncuhome/cato/src/plugins/cheese"
 	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
+	"github.com/ncuhome/cato/src/plugins/tray"
 )
 
-type FileWorker struct {
+type FileWare struct {
 	file    *protogen.File
 	context *common.GenContext
 }
 
-func NewFileWorker(file *protogen.File) *FileWorker {
-	fc := new(FileWorker)
+func NewFileWare(file *protogen.File) *FileWare {
+	fc := new(FileWare)
 	fc.file = file
 	return fc
 }
 
-func (fc *FileWorker) RegisterContext(gc *common.GenContext) *common.GenContext {
-	f := cheese.NewFileCheese(fc.file)
+func (fc *FileWare) RegisterContext(gc *common.GenContext) *common.GenContext {
+	f := tray.NewFileTray(fc.file)
 	ctx := gc.WithFile(fc.file, f)
 	return ctx
 }
 
-func (fc *FileWorker) Active(ctx *common.GenContext) (bool, error) {
+func (fc *FileWare) Active(ctx *common.GenContext) (bool, error) {
 	descriptor := protodesc.ToFileDescriptorProto(fc.file.Desc)
-	butters := butter.ChooseButter(fc.file.Desc)
+	butters := sprinkles.ChooseSprinkle(fc.file.Desc)
 	for index := range butters {
 		if !proto.HasExtension(descriptor.Options, butters[index].FromExtType()) {
 			continue
@@ -44,6 +44,6 @@ func (fc *FileWorker) Active(ctx *common.GenContext) (bool, error) {
 	return true, nil
 }
 
-func (fc *FileWorker) Complete(_ *common.GenContext) error {
+func (fc *FileWare) Complete(_ *common.GenContext) error {
 	return nil
 }

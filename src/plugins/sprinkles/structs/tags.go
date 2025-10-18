@@ -3,8 +3,8 @@ package structs
 import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/models"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
@@ -12,34 +12,34 @@ import (
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(FieldTagButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(FieldTagSprinkle)
 	})
 }
 
-type FieldTagButter struct {
+type FieldTagSprinkle struct {
 	option *generated.StructOption
 }
 
-func (f *FieldTagButter) FromExtType() protoreflect.ExtensionType {
+func (f *FieldTagSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_StructOpt
 }
 
-func (f *FieldTagButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (f *FieldTagSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.MessageDescriptor)
 	return ok
 }
 
-func (f *FieldTagButter) Init(value interface{}) {
+func (f *FieldTagSprinkle) Init(value interface{}) {
 	f.option = value.(*generated.StructOption)
 }
 
-func (f *FieldTagButter) Register(ctx *common.GenContext) error {
+func (f *FieldTagSprinkle) Register(ctx *common.GenContext) error {
 	if f.option == nil || len(f.option.GetFieldDefaultTags()) == 0 {
 		return nil
 	}
 	tags := f.option.GetFieldDefaultTags()
-	// common tags will be load in message-work-on butter
+	// common tags will be load in message-work-on sprinkles
 	// so when load field, default tags will be loaded
 	mc := ctx.GetNowMessageContainer()
 	for index := range tags {

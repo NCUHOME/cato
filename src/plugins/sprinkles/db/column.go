@@ -7,43 +7,43 @@ import (
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(ColFieldButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(ColFieldSprinkle)
 	})
 }
 
-type ColFieldButter struct {
+type ColFieldSprinkle struct {
 	value *generated.ColumnOption
 	tags  map[string]string
 }
 
-func (c *ColFieldButter) Init(value interface{}) {
+func (c *ColFieldSprinkle) Init(value interface{}) {
 	exValue, ok := value.(*generated.ColumnOption)
 	if !ok {
-		log.Fatalln("[-] cato ColFieldButter except ColumnOption")
+		log.Fatalln("[-] cato ColFieldSprinkle except ColumnOption")
 	}
 	c.value = exValue
 	c.tags = make(map[string]string)
 }
 
-func (c *ColFieldButter) FromExtType() protoreflect.ExtensionType {
+func (c *ColFieldSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_ColumnOpt
 }
 
-func (c *ColFieldButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (c *ColFieldSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.FieldDescriptor)
 	return ok
 }
 
-func (c *ColFieldButter) Register(ctx *common.GenContext) error {
+func (c *ColFieldSprinkle) Register(ctx *common.GenContext) error {
 	// self-tags has the highest priority
 	err := c.addTagInfo(ctx)
 	if err != nil {
@@ -57,10 +57,10 @@ func (c *ColFieldButter) Register(ctx *common.GenContext) error {
 	return nil
 }
 
-func (c *ColFieldButter) addColInfo(ctx *common.GenContext) error {
+func (c *ColFieldSprinkle) addColInfo(ctx *common.GenContext) error {
 	mc := ctx.GetNowMessageContainer()
 	field := ctx.GetNowField()
-	fieldType := common.MapperGoTypeName(ctx, field.Desc)
+	fieldType := common.MapperGoTypeNameFromField(ctx, field.Desc)
 	// todo: need a better way to check if set string type
 	if field.Desc.Kind() == protoreflect.MessageKind {
 		fieldType = "string"
@@ -86,7 +86,7 @@ func (c *ColFieldButter) addColInfo(ctx *common.GenContext) error {
 	return tmpl.Execute(mc.BorrowMethodsWriter(), colArrivalPack)
 }
 
-func (c *ColFieldButter) addTagInfo(ctx *common.GenContext) error {
+func (c *ColFieldSprinkle) addTagInfo(ctx *common.GenContext) error {
 	selfTags := c.value.GetTags()
 	if len(selfTags) == 0 {
 		return nil

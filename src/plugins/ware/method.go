@@ -1,0 +1,39 @@
+package ware
+
+import (
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/tray"
+)
+
+type MethodWare struct {
+	method *protogen.Method
+}
+
+func (mw *MethodWare) GetDescriptor() protoreflect.Descriptor {
+	return mw.method.Desc
+}
+
+func (mw *MethodWare) GetSubWares() []WorkWare {
+	return []WorkWare{}
+}
+
+func NewMethodWare(m *protogen.Method) *MethodWare {
+	return &MethodWare{method: m}
+}
+
+func (mw *MethodWare) RegisterContext(gc *common.GenContext) *common.GenContext {
+	mc := tray.NewMethodTray()
+	ctx := gc.WithMethod(mw.method, mc)
+	return ctx
+}
+
+func (mw *MethodWare) Active(ctx *common.GenContext) (bool, error) {
+	return active(ctx, mw)
+}
+
+func (mw *MethodWare) Complete(ctx *common.GenContext) error {
+	return nil
+}

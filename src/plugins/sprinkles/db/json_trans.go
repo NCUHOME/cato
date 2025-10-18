@@ -7,32 +7,32 @@ import (
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
-	"github.com/ncuhome/cato/src/plugins/butter"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
+	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
 
 func init() {
-	butter.Register(func() butter.Butter {
-		return new(JsonTransButter)
+	sprinkles.Register(func() sprinkles.Sprinkle {
+		return new(JsonTransSprinkle)
 	})
 }
 
-type JsonTransButter struct {
+type JsonTransSprinkle struct {
 	value *generated.ColumnOption
 }
 
-func (j *JsonTransButter) FromExtType() protoreflect.ExtensionType {
+func (j *JsonTransSprinkle) FromExtType() protoreflect.ExtensionType {
 	return generated.E_ColumnOpt
 }
 
-func (j *JsonTransButter) WorkOn(desc protoreflect.Descriptor) bool {
+func (j *JsonTransSprinkle) WorkOn(desc protoreflect.Descriptor) bool {
 	_, ok := desc.(protoreflect.FieldDescriptor)
 	return ok
 }
 
-func (j *JsonTransButter) Init(value interface{}) {
+func (j *JsonTransSprinkle) Init(value interface{}) {
 	data, ok := value.(*generated.ColumnOption)
 	if !ok {
 		return
@@ -40,7 +40,7 @@ func (j *JsonTransButter) Init(value interface{}) {
 	j.value = data
 }
 
-func (j *JsonTransButter) Register(ctx *common.GenContext) error {
+func (j *JsonTransSprinkle) Register(ctx *common.GenContext) error {
 	if j.value == nil || j.value.GetJsonTrans() == nil {
 		return nil
 	}
@@ -49,7 +49,7 @@ func (j *JsonTransButter) Register(ctx *common.GenContext) error {
 	ctx.GetNowFieldContainer().SetJsonTrans(true)
 
 	nowField := ctx.GetNowField()
-	fieldType := common.MapperGoTypeName(ctx, nowField.Desc)
+	fieldType := common.MapperGoTypeNameFromField(ctx, nowField.Desc)
 
 	if transOpt.LazyLoad {
 		// need to register extra inner field into message-fields map

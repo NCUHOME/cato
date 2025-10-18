@@ -1,4 +1,4 @@
-package plugins
+package ware
 
 import (
 	"errors"
@@ -9,16 +9,14 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
-	"github.com/ncuhome/cato/src/plugins/butter"
-	"github.com/ncuhome/cato/src/plugins/cheese"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
+	"github.com/ncuhome/cato/src/plugins/tray"
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
@@ -29,33 +27,49 @@ const (
 	repoFetchAllFuncName = "FetchAll"
 )
 
-type MessageWorker struct {
+type MessageWare struct {
 	message *protogen.Message
 }
 
-func NewMessageWorker(msg *protogen.Message) *MessageWorker {
-	mp := new(MessageWorker)
+func NewMessageWare(msg *protogen.Message) *MessageWare {
+	mp := new(MessageWare)
 	mp.message = msg
 	return mp
 }
 
 // RegisterContext because generate a file from a message, so a file-level writer for a message generates progress
-func (mw *MessageWorker) RegisterContext(gc *common.GenContext) *common.GenContext {
-	mc := cheese.NewMessageCheese()
+func (mw *MessageWare) RegisterContext(gc *common.GenContext) *common.GenContext {
+	mc := tray.NewMessageTray()
 	ctx := gc.WithMessage(mw.message, mc)
 	return ctx
 }
 
-func (mw *MessageWorker) filename() string {
+func (mw *MessageWare) GetSubWares() []WorkWare {
+	fields := make([]WorkWare, len(mw.message.Fields))
+	for i, field := range mw.message.Fields {
+		fields[i] = NewFieldWare(field)
+	}
+	return fields
+}
+
+func (mw *MessageWare) GetDescriptor() protoreflect.Descriptor {
+	return mw.message.Desc
+}
+
+func (mw *MessageWare) Active(ctx *common.GenContext) (bool, error) {
+	return active(ctx, mw)
+}
+
+func (mw *MessageWare) filename() string {
 	patterns := utils.SplitCamelWords(mw.message.GoIdent.GoName)
 	mapper := utils.GetStringsMapper(generated.FieldMapper_CATO_FIELD_MAPPER_SNAKE_CASE)
 	return mapper(patterns)
 }
 
-func (mw *MessageWorker) GetFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
+func (mw *MessageWare) GetFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	files := make([]*models.GenerateFileDesc, 0)
 	gen := []func(ctx *common.GenContext) ([]*models.GenerateFileDesc, error){
-		mw.generateModelFile, mw.generateModelExtendFile, mw.generateModelRepoFiles, mw.generateModelRdbFiles,
+		mw.generateModelFile, mw.generateModelExtendFiles, mw.generateModelRepoFiles, mw.generateModelRdbFiles,
 	}
 	var err error
 	for _, f := range gen {
@@ -68,7 +82,7 @@ func (mw *MessageWorker) GetFiles(ctx *common.GenContext) ([]*models.GenerateFil
 	return files, err
 }
 
-func (mw *MessageWorker) generateModelFile(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
+func (mw *MessageWare) generateModelFile(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	sw := new(strings.Builder)
 	tmpl := config.GetTemplate(config.ModelTmpl)
 	mc := ctx.GetNowMessageContainer()
@@ -97,7 +111,7 @@ func (mw *MessageWorker) generateModelFile(ctx *common.GenContext) ([]*models.Ge
 	}}, nil
 }
 
-func (mw *MessageWorker) generateModelExtendFile(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
+func (mw *MessageWare) generateModelExtendFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	sw := new(strings.Builder)
 	tmpl := config.GetTemplate(config.TableExtendTmpl)
 	fc := ctx.GetNowFileContainer()
@@ -123,7 +137,7 @@ func (mw *MessageWorker) generateModelExtendFile(ctx *common.GenContext) ([]*mod
 	}}, nil
 }
 
-func (mw *MessageWorker) generateModelRepoFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
+func (mw *MessageWare) generateModelRepoFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	fc := ctx.GetNowFileContainer()
 	repoPack := fc.GetRepoPackage()
 	if repoPack == nil || repoPack.IsEmpty() {
@@ -166,7 +180,7 @@ func (mw *MessageWorker) generateModelRepoFiles(ctx *common.GenContext) ([]*mode
 	return files, nil
 }
 
-func (mw *MessageWorker) generateModelRdbFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
+func (mw *MessageWare) generateModelRdbFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	fc := ctx.GetNowFileContainer()
 	repoPack := fc.GetRepoPackage()
 	modelPack := fc.GetCatoPackage()
@@ -186,7 +200,7 @@ func (mw *MessageWorker) generateModelRdbFiles(ctx *common.GenContext) ([]*model
 		RepoPackage:           repoPack.ImportPath,
 		ModelType:             ctx.GetNowMessageTypeName(),
 	}
-	// todo rdb engine funcs can move into messageCheese
+	// todo rdb engine funcs can move into messageTray
 	pack.FetchOneReturnType = fmt.Sprintf("*%s", pack.ModelType)
 	if !modelPack.IsSame(rdbPack) {
 		pack.FetchOneReturnType = fmt.Sprintf("*%s.%s", modelImportAlias, pack.ModelType)
@@ -223,38 +237,7 @@ func (mw *MessageWorker) generateModelRdbFiles(ctx *common.GenContext) ([]*model
 	return files, nil
 }
 
-func (mw *MessageWorker) Active(ctx *common.GenContext) (bool, error) {
-	descriptor := protodesc.ToDescriptorProto(mw.message.Desc)
-	butters := butter.ChooseButter(mw.message.Desc)
-
-	for index := range butters {
-		if !proto.HasExtension(descriptor.Options, butters[index].FromExtType()) {
-			continue
-		}
-		value := proto.GetExtension(descriptor.Options, butters[index].FromExtType())
-		butters[index].Init(value)
-		err := butters[index].Register(ctx)
-		if err != nil {
-			return false, err
-		}
-	}
-	// for fields
-	for _, field := range mw.message.Fields {
-		fp := NewFieldCheese(field)
-		fieldCtx := fp.RegisterContext(ctx)
-		_, err := fp.Active(fieldCtx)
-		if err != nil {
-			return false, err
-		}
-		err = fp.Complete(fieldCtx)
-		if err != nil {
-			return false, err
-		}
-	}
-	return true, nil
-}
-
-func (mw *MessageWorker) Complete(ctx *common.GenContext) error {
+func (mw *MessageWare) Complete(ctx *common.GenContext) error {
 	err := mw.completeCols(ctx)
 	if err != nil {
 		return err
@@ -267,7 +250,7 @@ func (mw *MessageWorker) Complete(ctx *common.GenContext) error {
 	return nil
 }
 
-func (mw *MessageWorker) completeCols(ctx *common.GenContext) error {
+func (mw *MessageWare) completeCols(ctx *common.GenContext) error {
 	mc := ctx.GetNowMessageContainer()
 	cols := mc.GetScopeCols()
 	if len(cols) == 0 {
@@ -290,7 +273,7 @@ type repoCompleteParam struct {
 	writer   func() io.Writer
 }
 
-func (mw *MessageWorker) completeRepo(ctx *common.GenContext, params []*packs.RepoFuncTmplPack) error {
+func (mw *MessageWare) completeRepo(ctx *common.GenContext, params []*packs.RepoFuncTmplPack) error {
 	fc := ctx.GetNowFileContainer()
 	mc := ctx.GetNowMessageContainer()
 	runParams := make([]*repoCompleteParam, 0)
@@ -325,7 +308,7 @@ func (mw *MessageWorker) completeRepo(ctx *common.GenContext, params []*packs.Re
 	return err
 }
 
-func (mw *MessageWorker) repoInsRunner(rcp *repoCompleteParam, params []*packs.RepoFuncTmplPack) error {
+func (mw *MessageWare) repoInsRunner(rcp *repoCompleteParam, params []*packs.RepoFuncTmplPack) error {
 	isRepoSame := rcp.basePath.IsSame(rcp.path)
 	var (
 		err     error
@@ -359,7 +342,7 @@ func (mw *MessageWorker) repoInsRunner(rcp *repoCompleteParam, params []*packs.R
 	return err
 }
 
-func (mw *MessageWorker) loadKeyTmplPacks(ctx *common.GenContext) []*packs.RepoFuncTmplPack {
+func (mw *MessageWare) loadKeyTmplPacks(ctx *common.GenContext) []*packs.RepoFuncTmplPack {
 	keys := ctx.GetNowMessageContainer().GetScopeKeys()
 	if len(keys) == 0 {
 		return nil

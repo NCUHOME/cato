@@ -35,6 +35,12 @@ const (
 	RepoFetchTmpl  = "repo_fetch.tmpl"
 	RepoUpdateTmpl = "repo_update.tmpl"
 	RepoInsertTmpl = "repo_insert.tmpl"
+
+	HttpHandlerTmpl         = "http_handler.tmpl"
+	HttpHandlerRegisterTmpl = "http_handler_register.tmpl"
+	HttpProtocolTmpl        = "http_protocol.tmpl"
+	HttpProtocolMethodTmpl  = "http_protocol_method.tmpl"
+	HttpProtocolTierTmpl    = "http_protocol_tier.tmpl"
 )
 
 var (
@@ -69,6 +75,12 @@ var templateNames = []string{
 	RdbFetchTmpl,
 	RdbUpdateTmpl,
 	RdbInsertTmpl,
+
+	HttpHandlerTmpl,
+	HttpHandlerRegisterTmpl,
+	HttpProtocolTmpl,
+	HttpProtocolMethodTmpl,
+	HttpProtocolTierTmpl,
 }
 
 func init() {
