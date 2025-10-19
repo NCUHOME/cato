@@ -68,8 +68,11 @@ func (mw *MessageWare) filename() string {
 
 func (mw *MessageWare) GetFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	files := make([]*models.GenerateFileDesc, 0)
-	gen := []func(ctx *common.GenContext) ([]*models.GenerateFileDesc, error){
-		mw.generateModelFile, mw.generateModelExtendFiles, mw.generateModelRepoFiles, mw.generateModelRdbFiles,
+	gen := []fileGenerator{
+		mw.generateModelFile,
+		mw.generateModelExtendFiles,
+		mw.generateModelRepoFiles,
+		mw.generateModelRdbFiles,
 	}
 	var err error
 	for _, f := range gen {
@@ -91,10 +94,11 @@ func (mw *MessageWare) generateModelFile(ctx *common.GenContext) ([]*models.Gene
 	if modelPack == nil || modelPack.IsEmpty() {
 		return []*models.GenerateFileDesc{}, nil
 	}
+	imports := append([]string{}, fc.GetImports()...)
 	pack := &packs.ModelContentTmplPack{
 		PackageName: utils.GetGoPackageName(modelPack.GetPath()),
 		ModelName:   mw.message.GoIdent.GoName,
-		Imports:     append(fc.GetImports(), mc.GetImports()...),
+		Imports:     append(imports, mc.GetImports()...),
 		Fields:      mc.GetField(),
 		Methods:     mc.GetMethods(),
 	}

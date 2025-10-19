@@ -1,4 +1,4 @@
-handler.container.Set({{.HttpMethod}}, {{.HttpMethodPath}}, func(w http.ResponseWriter, r *http.Request) {
+handler.container.Set("{{.HttpMethod}}", "{{.HttpMethodPath}}", func(w http.ResponseWriter, r *http.Request) {
 	ctx, request := handler.tier.Build{{.MethodName}}Request(r)
 	response, err := handler.service.{{.MethodName}}(ctx, request)
 	handler.tier.Wrap{{.MethodName}}Response(w, response, err)

@@ -46,5 +46,8 @@ func (p *PackageSprinkle) Register(ctx *common.GenContext) error {
 	if p.value.GetRdbRepoPackage() != "" {
 		fc.SetRdbRepoPackage(p.value.GetRdbRepoPackage())
 	}
+	if p.value.GetHttpHandlerPackage() != "" {
+		fc.SetHttpHandlerPackage(p.value.GetHttpHandlerPackage())
+	}
 	return nil
 }

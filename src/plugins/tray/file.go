@@ -10,10 +10,11 @@ import (
 type FileTray struct {
 	imports map[string]*models.Import
 	// todo optimize as repo map
-	catoPackage    *models.Import
-	catoExtPackage *models.Import
-	repoPackage    *models.Import
-	rdbRepoPackage *models.Import
+	catoPackage        *models.Import
+	catoExtPackage     *models.Import
+	repoPackage        *models.Import
+	rdbRepoPackage     *models.Import
+	httpHandlerPackage *models.Import
 }
 
 func NewFileTray(file *protogen.File) *FileTray {
@@ -84,4 +85,13 @@ func (fc *FileTray) SetRdbRepoPackage(packagePath string) {
 
 func (fc *FileTray) GetRdbRepoPackage() *models.Import {
 	return fc.rdbRepoPackage
+}
+
+func (fc *FileTray) SetHttpHandlerPackage(packagePath string) {
+	i := new(models.Import).Init(packagePath)
+	fc.httpHandlerPackage = i
+}
+
+func (fc *FileTray) GetHttpHandlerPackage() *models.Import {
+	return fc.httpHandlerPackage
 }

@@ -16,13 +16,14 @@ type {{.ServiceName}}Service interface {
 	{{- end}}
 }
 
-type{{.ServiceName}}ServiceTier interface {
-    {{- range .Methods}}
+type {{.ServiceName}}ServiceTier interface {
+    {{- range .TierMethods}}
 	{{.}}
 	{{- end}}
 }
 
 type {{.ServiceName}}ServiceContainer interface {
     Set(method string, path string, runner  func(w http.ResponseWriter, r *http.Request))
-    Get(method string, path string) (func(w http.ResponseWriter, r *http.Request), ok)
+    Get(method string, path string) (func(w http.ResponseWriter, r *http.Request), bool)
+    ToMap() map[string]http.HandlerFunc
 }

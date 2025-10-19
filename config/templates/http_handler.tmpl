@@ -7,26 +7,27 @@ import (
 
 type {{.ServiceName}}HttpHandler struct {
 	service   {{.ServiceName}}Service
-	tier      {{.ServiceNamw}}ServiceTier
+	tier      {{.ServiceName}}ServiceTier
 	container {{.ServiceName}}ServiceContainer
 }
 
 func New{{.ServiceName}}HttpHandler(
     service {{.ServiceName}}Service,
-    tier {{.ServiceNamw}}ServiceTier,
+    tier {{.ServiceName}}ServiceTier,
     container {{.ServiceName}}ServiceContainer,
-) {
+) *{{.ServiceName}}HttpHandler {
+    s := new({{.ServiceName}}HttpHandler)
     s.service = service
     s.tier = tier
     s.container = container
+    return s
 }
 
 func (handler *{{.ServiceName}}HttpHandler) GetRoutersMap() map[string]http.HandlerFunc {
-	container := make(map[string]http.HandlerFunc)
 	{{- range .RegisterServiceMethods}}
 	{{.}}
 	{{- end}}
-	return container
+	return handler.container.ToMap()
 }
 
 func (handler *{{.ServiceName}}HttpHandler) GetRouterGroupBase() string {

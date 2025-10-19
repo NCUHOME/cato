@@ -47,6 +47,7 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 
 		files := make([]*models.GenerateFileDesc, 0)
 		allMessages := g.loadAllMessages(file.Messages)
+		// for messages
 		for _, message := range allMessages {
 			// init message scope tray
 			mc := ware.NewMessageWare(message)
@@ -60,6 +61,24 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 				log.Fatalf("[-] cato could not complete message %s: %v\n", mctx.GetNowMessageTypeName(), err)
 			}
 			genFiles, err := mc.GetFiles(mctx)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			files = append(files, genFiles...)
+		}
+		// for service
+		for _, service := range file.Services {
+			sw := ware.NewServiceWare(service)
+			sctx := sw.RegisterContext(ctx)
+			ok, err := sw.Active(sctx)
+			if err != nil || !ok {
+				log.Fatalf("[-] cato could not activate message %s: %v\n", sctx.GetNowService().GoName, err)
+			}
+			err = sw.Complete(sctx)
+			if err != nil {
+				log.Fatalf("[-] cato could not complete message %s: %v\n", sctx.GetNowService().GoName, err)
+			}
+			genFiles, err := sw.GetFiles(sctx)
 			if err != nil {
 				log.Fatalln(err)
 			}
