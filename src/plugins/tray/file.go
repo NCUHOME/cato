@@ -1,6 +1,9 @@
 package tray
 
 import (
+	"io"
+	"strings"
+
 	"google.golang.org/protobuf/compiler/protogen"
 
 	"github.com/ncuhome/cato/src/plugins/models"
@@ -10,16 +13,19 @@ import (
 type FileTray struct {
 	imports map[string]*models.Import
 	// todo optimize as repo map
-	catoPackage        *models.Import
-	catoExtPackage     *models.Import
-	repoPackage        *models.Import
-	rdbRepoPackage     *models.Import
-	httpHandlerPackage *models.Import
+	catoPackage    *models.Import
+	repoPackage    *models.Import
+	rdbRepoPackage *models.Import
+
+	outImports []*strings.Builder
+	outContent []*strings.Builder
 }
 
 func NewFileTray(file *protogen.File) *FileTray {
-	cheese := new(FileTray)
-	cheese.imports = make(map[string]*models.Import)
+	tray := new(FileTray)
+	tray.imports = make(map[string]*models.Import)
+	tray.outImports = make([]*strings.Builder, 0)
+	tray.outContent = make([]*strings.Builder, 0)
 
 	desc := file.Desc
 	for index := 0; index < desc.Imports().Len(); index++ {
@@ -29,9 +35,9 @@ func NewFileTray(file *protogen.File) *FileTray {
 		if !ok {
 			continue
 		}
-		cheese.imports[importPackage] = new(models.Import).Init(importCatoPath)
+		tray.imports[importPackage] = new(models.Import).Init(importCatoPath)
 	}
-	return cheese
+	return tray
 }
 
 func (fc *FileTray) GetImportPathAlias(path string) string {
@@ -40,6 +46,22 @@ func (fc *FileTray) GetImportPathAlias(path string) string {
 		return ""
 	}
 	return v.Alias
+}
+
+func (fc *FileTray) GetOutImports() []string {
+	ss := make([]string, len(fc.outImports))
+	for i, v := range fc.outImports {
+		ss[i] = v.String()
+	}
+	return ss
+}
+
+func (fc *FileTray) GetOutContent() []string {
+	ss := make([]string, len(fc.outContent))
+	for i, v := range fc.outContent {
+		ss[i] = v.String()
+	}
+	return ss
 }
 
 func (fc *FileTray) GetImports() []string {
@@ -60,15 +82,6 @@ func (fc *FileTray) GetCatoPackage() *models.Import {
 	return fc.catoPackage
 }
 
-func (fc *FileTray) SetCatoExtPackage(packagePath string) {
-	i := new(models.Import).Init(packagePath)
-	fc.catoExtPackage = i
-}
-
-func (fc *FileTray) GetCatoExtPackage() *models.Import {
-	return fc.catoExtPackage
-}
-
 func (fc *FileTray) SetRepoPackage(packagePath string) {
 	i := new(models.Import).Init(packagePath)
 	fc.repoPackage = i
@@ -87,11 +100,12 @@ func (fc *FileTray) GetRdbRepoPackage() *models.Import {
 	return fc.rdbRepoPackage
 }
 
-func (fc *FileTray) SetHttpHandlerPackage(packagePath string) {
-	i := new(models.Import).Init(packagePath)
-	fc.httpHandlerPackage = i
+func (fc *FileTray) BorrowImportWriter() io.Writer {
+	fc.outImports = append(fc.outImports, new(strings.Builder))
+	return fc.outImports[len(fc.outImports)-1]
 }
 
-func (fc *FileTray) GetHttpHandlerPackage() *models.Import {
-	return fc.httpHandlerPackage
+func (fc *FileTray) BorrowContentWriter() io.Writer {
+	fc.outContent = append(fc.outContent, new(strings.Builder))
+	return fc.outContent[len(fc.outContent)-1]
 }

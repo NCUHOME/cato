@@ -17,9 +17,9 @@ func MapperGoTypeNameFromField(ctx *GenContext, field protoreflect.FieldDescript
 		}
 		typeName := MapperGoTypeNameFromMessage(ctx, field.Message().(protoreflect.MessageDescriptor))
 		if field.IsList() {
-			return fmt.Sprintf("[]*%s", typeName)
+			return fmt.Sprintf("[]%s", typeName)
 		}
-		return fmt.Sprintf("*%s", typeName)
+		return fmt.Sprintf("%s", typeName)
 	case protoreflect.EnumKind:
 		// todo can define if enum map to string or int
 		return "int32"
@@ -28,7 +28,6 @@ func MapperGoTypeNameFromField(ctx *GenContext, field protoreflect.FieldDescript
 	}
 }
 
-// todo: need also return type package name
 func MapperGoTypeNameFromMessage(ctx *GenContext, messageDesc protoreflect.MessageDescriptor) string {
 	if messageDesc.IsMapEntry() {
 		keyType := MapperGoTypeNameFromField(ctx, messageDesc.Fields().Get(0))

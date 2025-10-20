@@ -19,6 +19,8 @@ type MessageTray struct {
 	scopeTags map[string]*models.Tag
 	scopeCols map[string]*models.Col
 	scopeKeys map[string]*models.Key
+
+	needExtraFile bool
 }
 
 func NewMessageTray() *MessageTray {
@@ -182,4 +184,12 @@ func (mc *MessageTray) GetScopeKeys() []*models.Key {
 		return keys[i].KeyName < keys[j].KeyName
 	})
 	return keys
+}
+
+func (mc *MessageTray) SetNeedExtraFile(need bool) {
+	mc.needExtraFile = need
+}
+
+func (mc *MessageTray) IsNeedExtraFile() bool {
+	return mc.needExtraFile
 }

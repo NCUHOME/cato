@@ -11,6 +11,8 @@ import (
 const (
 	tmplPath = "templates"
 
+	CatoFileTmpl = "cato_file.tmpl"
+
 	ColArrivalTmpl  = "cols_arrival.tmpl"
 	TableNameTmpl   = "table_name.tmpl"
 	TableExtendTmpl = "table_extend.tmpl"
@@ -51,6 +53,8 @@ var (
 )
 
 var templateNames = []string{
+	CatoFileTmpl,
+
 	ColArrivalTmpl,
 	TableNameTmpl,
 	TableExtendTmpl,

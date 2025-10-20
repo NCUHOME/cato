@@ -12,7 +12,6 @@ import (
 
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/flags"
-	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/ware"
 )
 
@@ -40,52 +39,19 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 	for _, file := range genOption.Files {
 		fc := ware.NewFileWare(file)
 		ctx := fc.RegisterContext(new(common.GenContext))
-		_, err = fc.Active(ctx)
+		_, err = ware.Active(ctx, fc)
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		files := make([]*models.GenerateFileDesc, 0)
-		allMessages := g.loadAllMessages(file.Messages)
-		// for messages
-		for _, message := range allMessages {
-			// init message scope tray
-			mc := ware.NewMessageWare(message)
-			mctx := mc.RegisterContext(ctx)
-			ok, err := mc.Active(mctx)
-			if err != nil || !ok {
-				log.Fatalf("[-] cato could not activate message %s: %v\n", mctx.GetNowMessageTypeName(), err)
-			}
-			err = mc.Complete(mctx)
-			if err != nil {
-				log.Fatalf("[-] cato could not complete message %s: %v\n", mctx.GetNowMessageTypeName(), err)
-			}
-			genFiles, err := mc.GetFiles(mctx)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			files = append(files, genFiles...)
+		err = fc.Complete(ctx)
+		if err != nil {
+			log.Fatalln(err)
 		}
-		// for service
-		for _, service := range file.Services {
-			sw := ware.NewServiceWare(service)
-			sctx := sw.RegisterContext(ctx)
-			ok, err := sw.Active(sctx)
-			if err != nil || !ok {
-				log.Fatalf("[-] cato could not activate message %s: %v\n", sctx.GetNowService().GoName, err)
-			}
-			err = sw.Complete(sctx)
-			if err != nil {
-				log.Fatalf("[-] cato could not complete message %s: %v\n", sctx.GetNowService().GoName, err)
-			}
-			genFiles, err := sw.GetFiles(sctx)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			files = append(files, genFiles...)
+		fs, err := fc.GetExtraFiles(ctx)
+		if err != nil {
+			log.Fatalln(err)
 		}
-		// todo as complete func
-		for _, gf := range files {
+		for _, gf := range fs {
 			if gf.CheckExists {
 				// check if file exists
 				_, err := os.Stat(filepath.Join(outdir, gf.Name))
@@ -116,19 +82,4 @@ func (g *CatoGenerator) outputContent(filename, content string) *pluginpb.CodeGe
 		Name:    &filename,
 		Content: &formatted,
 	}
-}
-
-// loadAllMessages will load all messages include nested from parent messages
-func (g *CatoGenerator) loadAllMessages(parents []*protogen.Message) []*protogen.Message {
-	if len(parents) == 0 {
-		return make([]*protogen.Message, 0)
-	}
-	results := make([]*protogen.Message, 0)
-	// first load self
-	results = append(results, parents...)
-	for _, message := range parents {
-		// load message children
-		results = append(results, g.loadAllMessages(message.Messages)...)
-	}
-	return results
 }

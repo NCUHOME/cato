@@ -56,12 +56,12 @@ func (t *TableBasicSprinkle) Register(ctx *common.GenContext) error {
 	// set extension
 	mc := ctx.GetNowMessageContainer()
 	_, err := mc.BorrowFieldWriter().Write([]byte("ext *extension"))
+	// data object auto set ext package
+	mc.SetNeedExtraFile(true)
 	if err != nil {
 		return err
 	}
 	// need set ext file
-	fc := ctx.GetNowFileContainer()
-	fc.SetCatoExtPackage(fc.GetCatoPackage().ImportPath)
 	tmpl := config.GetTemplate(config.TableNameTmpl)
 	// check if the table name is simple
 	if t.value.NameOption.GetSimpleName() != "" {
@@ -69,5 +69,5 @@ func (t *TableBasicSprinkle) Register(ctx *common.GenContext) error {
 		return tmpl.Execute(mc.BorrowMethodsWriter(), pack)
 	}
 	// table name will impl in an extra file
-	return tmpl.Execute(mc.BorrowFieldWriter(), pack)
+	return tmpl.Execute(mc.BorrowExtraWriter(), pack)
 }

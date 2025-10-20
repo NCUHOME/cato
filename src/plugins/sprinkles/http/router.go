@@ -18,6 +18,10 @@ func init() {
 	})
 }
 
+var (
+	extraImport = []string{"\"context\"", "\"net/http\""}
+)
+
 type RouterSprinkle struct {
 	value *generated.RouterOptions
 }
@@ -43,6 +47,13 @@ func (r *RouterSprinkle) Register(ctx *common.GenContext) error {
 	relativePath := r.value.GetRouter()
 	if relativePath == "" {
 		return nil
+	}
+	fc := ctx.GetNowServiceContainer()
+	for _, i := range extraImport {
+		_, err := fc.BorrowExtraImportReader().Write([]byte(i))
+		if err != nil {
+			return err
+		}
 	}
 	// register router into handler service and protocol interface
 	return errors.Join(

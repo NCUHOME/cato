@@ -16,7 +16,8 @@ import (
 )
 
 type ServiceWare struct {
-	service *protogen.Service
+	service        *protogen.Service
+	methodGenFiles []*models.GenerateFileDesc
 }
 
 func NewServiceWare(service *protogen.Service) *ServiceWare {
@@ -42,21 +43,51 @@ func (sw *ServiceWare) RegisterContext(gc *common.GenContext) *common.GenContext
 }
 
 func (sw *ServiceWare) Active(ctx *common.GenContext) (bool, error) {
-	return active(ctx, sw)
+	return Active(ctx, sw)
 }
 
-func (sw *ServiceWare) Complete(_ *common.GenContext) error { return nil }
+func (sw *ServiceWare) Complete(ctx *common.GenContext) error {
+	return sw.completeContent(ctx)
+}
 
-func (sw *ServiceWare) GetFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
+func (sw *ServiceWare) completeContent(ctx *common.GenContext) error {
+	locate := ctx.GetNowFileContainer().GetCatoPackage()
+	sc := ctx.GetNowServiceContainer()
+	service := ctx.GetNowService()
+	tmpl := config.GetTemplate(config.HttpProtocolTmpl)
+	pack := &packs.HttpProtocolTmplPack{
+		HttpHandlerPackage: utils.GetGoPackageName(locate.GetPath()),
+		ServiceName:        service.GoName,
+		Methods:            sc.GetMethods(),
+		TierMethods:        sc.GetTiers(),
+	}
+	fc := ctx.GetNowFileContainer()
+	err := tmpl.Execute(fc.BorrowContentWriter(), pack)
+	if err != nil {
+		return err
+	}
+	for _, mi := range sc.GetExtraImport() {
+		_, err = fc.BorrowImportWriter().Write([]byte(mi))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (sw *ServiceWare) AddExtraFiles(files []*models.GenerateFileDesc) {
+	sw.methodGenFiles = append(sw.methodGenFiles, files...)
+}
+
+func (sw *ServiceWare) GetExtraFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	// check has package file entry
 	fc := ctx.GetNowFileContainer()
-	locate := fc.GetHttpHandlerPackage()
+	locate := fc.GetCatoPackage()
 	if locate.IsEmpty() {
 		return []*models.GenerateFileDesc{}, nil
 	}
 	// generate http service register handler and generate
 	generator := []fileGenerator{
-		sw.generateProtocol,
 		sw.generateHandler,
 	}
 	files := make([]*models.GenerateFileDesc, 0)
@@ -67,11 +98,11 @@ func (sw *ServiceWare) GetFiles(ctx *common.GenContext) ([]*models.GenerateFileD
 		}
 		files = append(files, fs...)
 	}
-	return files, nil
+	return append(sw.methodGenFiles, files...), nil
 }
 
 func (sw *ServiceWare) generateHandler(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
-	locate := ctx.GetNowFileContainer().GetHttpHandlerPackage()
+	locate := ctx.GetNowFileContainer().GetCatoPackage()
 	sc := ctx.GetNowServiceContainer()
 	service := ctx.GetNowService()
 	tmpl := config.GetTemplate(config.HttpHandlerTmpl)
@@ -87,32 +118,6 @@ func (sw *ServiceWare) generateHandler(ctx *common.GenContext) ([]*models.Genera
 		return nil, err
 	}
 	filename := filepath.Join(locate.ImportPath, "handlers.cato.go")
-	return []*models.GenerateFileDesc{{
-		Name:        filename,
-		Content:     sb.String(),
-		CheckExists: false,
-	}}, nil
-}
-
-func (sw *ServiceWare) generateProtocol(ctx *common.GenContext) ([]*models.GenerateFileDesc, error) {
-	locate := ctx.GetNowFileContainer().GetHttpHandlerPackage()
-	sc := ctx.GetNowServiceContainer()
-	service := ctx.GetNowService()
-	tmpl := config.GetTemplate(config.HttpProtocolTmpl)
-	imports := append([]string{}, ctx.GetNowFileContainer().GetImports()...)
-	pack := &packs.HttpProtocolTmplPack{
-		HttpHandlerPackage:    utils.GetGoPackageName(locate.GetPath()),
-		ProtocolParamPackages: append(imports, sc.GetExtraImport()...),
-		ServiceName:           service.GoName,
-		Methods:               sc.GetMethods(),
-		TierMethods:           sc.GetTiers(),
-	}
-	sb := new(strings.Builder)
-	err := tmpl.Execute(sb, pack)
-	if err != nil {
-		return nil, err
-	}
-	filename := filepath.Join(locate.ImportPath, "protocol.cato.go")
 	return []*models.GenerateFileDesc{{
 		Name:        filename,
 		Content:     sb.String(),

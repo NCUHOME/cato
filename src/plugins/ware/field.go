@@ -65,7 +65,7 @@ func (fw *FieldWare) asTmplPack(fieldType string, tags []string) *packs.FieldPac
 }
 
 func (fw *FieldWare) Active(ctx *common.GenContext) (bool, error) {
-	ok, err := active(ctx, fw)
+	ok, err := Active(ctx, fw)
 	if !ok || err != nil {
 		return false, err
 	}
@@ -97,4 +97,10 @@ func (fw *FieldWare) Complete(ctx *common.GenContext) error {
 	fdc := ctx.GetNowFieldContainer()
 	pack := fw.asTmplPack(fieldType, fdc.GetTags())
 	return config.GetTemplate(config.FieldTmpl).Execute(wr, pack)
+}
+
+func (fw *FieldWare) AddExtraFiles(_ []*models.GenerateFileDesc) {}
+
+func (fw *FieldWare) GetExtraFiles(_ *common.GenContext) ([]*models.GenerateFileDesc, error) {
+	return []*models.GenerateFileDesc{}, nil
 }
