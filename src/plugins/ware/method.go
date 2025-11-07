@@ -21,7 +21,7 @@ func (mw *MethodWare) GetExtraFiles(_ *common.GenContext) ([]*models.GenerateFil
 	return []*models.GenerateFileDesc{}, nil
 }
 
-func (mw *MethodWare) AddExtraFiles(_ []*models.GenerateFileDesc) {}
+func (mw *MethodWare) StoreExtraFiles(_ []*models.GenerateFileDesc) {}
 
 func (mw *MethodWare) GetDescriptor() protoreflect.Descriptor {
 	return mw.method.Desc
@@ -38,7 +38,7 @@ func (mw *MethodWare) RegisterContext(gc *common.GenContext) *common.GenContext 
 }
 
 func (mw *MethodWare) Active(ctx *common.GenContext) (bool, error) {
-	return Active(ctx, mw)
+	return CommonWareActive(ctx, mw)
 }
 
 func (mw *MethodWare) Complete(_ *common.GenContext) error {

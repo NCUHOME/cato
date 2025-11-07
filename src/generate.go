@@ -39,7 +39,7 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 	for _, file := range genOption.Files {
 		fc := ware.NewFileWare(file)
 		ctx := fc.RegisterContext(new(common.GenContext))
-		_, err = ware.Active(ctx, fc)
+		_, err = ware.CommonWareActive(ctx, fc)
 		if err != nil {
 			log.Fatalln(err)
 		}

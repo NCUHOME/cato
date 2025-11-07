@@ -16,6 +16,8 @@ import (
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
+// FileWare works for parsing file options
+// also a file is the root of a ware tree because of cato_package option
 type FileWare struct {
 	file       *protogen.File
 	context    *common.GenContext
@@ -40,12 +42,13 @@ func (fw *FileWare) RegisterContext(gc *common.GenContext) *common.GenContext {
 }
 
 func (fw *FileWare) Active(ctx *common.GenContext) (bool, error) {
-	return Active(ctx, fw)
+	return CommonWareActive(ctx, fw)
 }
 
 func (fw *FileWare) GetSubWares() []WorkWare {
 	subs := make([]WorkWare, 0)
-	// load messages ware
+	// load messages descriptor in a file
+	// for a file ware, message and service ware is the direct sub ware
 	msgs := fw.loadAllMessages(fw.file.Messages)
 	for _, msg := range msgs {
 		mw := NewMessageWare(msg)
@@ -61,6 +64,8 @@ func (fw *FileWare) GetSubWares() []WorkWare {
 func (fw *FileWare) Complete(ctx *common.GenContext) error {
 	fc := ctx.GetNowFileContainer()
 	catoPackage := fc.GetCatoPackage()
+	// cato plugin use 'cato_package option' to determine if this proto file will be parsed by cato
+	// if no cato package specified, cato plugin will not generate file content
 	if catoPackage == nil || catoPackage.IsEmpty() {
 		return nil
 	}
@@ -108,7 +113,7 @@ func (fw *FileWare) loadAllMessages(parents []*protogen.Message) []*protogen.Mes
 	return results
 }
 
-func (fw *FileWare) AddExtraFiles(files []*models.GenerateFileDesc) {
+func (fw *FileWare) StoreExtraFiles(files []*models.GenerateFileDesc) {
 	fw.extraFiles = append(fw.extraFiles, files...)
 }
 

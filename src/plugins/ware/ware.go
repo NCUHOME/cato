@@ -16,10 +16,10 @@ type WorkWare interface {
 	Complete(ctx *common.GenContext) error
 	GetSubWares() []WorkWare
 	GetExtraFiles(ctx *common.GenContext) ([]*models.GenerateFileDesc, error)
-	AddExtraFiles(files []*models.GenerateFileDesc)
+	StoreExtraFiles(files []*models.GenerateFileDesc)
 }
 
-func Active(ctx *common.GenContext, ware WorkWare) (bool, error) {
+func CommonWareActive(ctx *common.GenContext, ware WorkWare) (bool, error) {
 	descriptor := ware.GetDescriptor()
 	spks := sprinkles.ChooseSprinkle(ware.GetDescriptor())
 	for index := range spks {
@@ -52,7 +52,7 @@ func Active(ctx *common.GenContext, ware WorkWare) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		ware.AddExtraFiles(extraFiles)
+		ware.StoreExtraFiles(extraFiles)
 	}
 	return true, nil
 }

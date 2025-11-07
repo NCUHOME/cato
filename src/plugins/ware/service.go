@@ -43,7 +43,7 @@ func (sw *ServiceWare) RegisterContext(gc *common.GenContext) *common.GenContext
 }
 
 func (sw *ServiceWare) Active(ctx *common.GenContext) (bool, error) {
-	return Active(ctx, sw)
+	return CommonWareActive(ctx, sw)
 }
 
 func (sw *ServiceWare) Complete(ctx *common.GenContext) error {
@@ -75,7 +75,7 @@ func (sw *ServiceWare) completeContent(ctx *common.GenContext) error {
 	return nil
 }
 
-func (sw *ServiceWare) AddExtraFiles(files []*models.GenerateFileDesc) {
+func (sw *ServiceWare) StoreExtraFiles(files []*models.GenerateFileDesc) {
 	sw.methodGenFiles = append(sw.methodGenFiles, files...)
 }
 

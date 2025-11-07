@@ -15,6 +15,8 @@ import (
 	"github.com/ncuhome/cato/src/plugins/utils"
 )
 
+// FieldWare work for parsing message's field option
+// field ware is the last node in ware three and has no any sub wares
 type FieldWare struct {
 	field       *protogen.Field
 	DefaultTags []*models.Kv
@@ -31,6 +33,7 @@ func (fw *FieldWare) GetDescriptor() protoreflect.Descriptor {
 }
 
 func (fw *FieldWare) GetSubWares() []WorkWare {
+	// field ware has no sub wares
 	return []WorkWare{}
 }
 
@@ -46,6 +49,7 @@ func (fw *FieldWare) asTmplPack(fieldType string, tags []string, comments []stri
 			Name:   fw.field.GoName,
 			GoType: fieldType,
 		},
+		// comments use "," to join together
 		Comments: strings.Join(comments, ", "),
 	}
 
@@ -66,7 +70,7 @@ func (fw *FieldWare) asTmplPack(fieldType string, tags []string, comments []stri
 }
 
 func (fw *FieldWare) Active(ctx *common.GenContext) (bool, error) {
-	ok, err := Active(ctx, fw)
+	ok, err := CommonWareActive(ctx, fw)
 	if !ok || err != nil {
 		return false, err
 	}
@@ -78,7 +82,7 @@ func (fw *FieldWare) Active(ctx *common.GenContext) (bool, error) {
 		}
 		target := fdc.BorrowTagWriter()
 		tagData := fmt.Sprintf("%s:\"%s\"", scopeTag.KV.Key, scopeTag.GetTagValue(fw.field.GoName))
-		_, err := target.Write([]byte(tagData))
+		_, err = target.Write([]byte(tagData))
 		if err != nil {
 			return false, err
 		}
@@ -90,6 +94,9 @@ func (fw *FieldWare) Complete(ctx *common.GenContext) error {
 	wr := ctx.GetNowMessageContainer().BorrowFieldWriter()
 	// register into field writer
 	fieldType := common.MapperGoTypeNameFromField(ctx, fw.field.Desc)
+	// json trans will change field type when field has json tag
+	// origin field will become string type to load json raw value
+	// but need better way to check if field has json-trans tag
 	if ctx.GetNowFieldContainer().IsJsonTrans() {
 		fieldType = "string"
 		mc := ctx.GetNowMessageContainer()
@@ -100,7 +107,7 @@ func (fw *FieldWare) Complete(ctx *common.GenContext) error {
 	return config.GetTemplate(config.FieldTmpl).Execute(wr, pack)
 }
 
-func (fw *FieldWare) AddExtraFiles(_ []*models.GenerateFileDesc) {}
+func (fw *FieldWare) StoreExtraFiles(_ []*models.GenerateFileDesc) {}
 
 func (fw *FieldWare) GetExtraFiles(_ *common.GenContext) ([]*models.GenerateFileDesc, error) {
 	return []*models.GenerateFileDesc{}, nil

@@ -1,14 +1,14 @@
 package packs
 
-type RepoFuncTmplPackParam struct {
+type RepoKeyFuncTmplPackParam struct {
 	FieldName string
 	ParamName string
 }
 
-type RepoFuncTmplPack struct {
+type RepoKeyFuncTmplPack struct {
 	KeyNameCombine        string
 	ModelType             string
-	Params                []*RepoFuncTmplPackParam
+	Params                []*RepoKeyFuncTmplPackParam
 	FetchFuncName         string
 	FetchReturnType       string
 	ModelPackage          string
@@ -19,15 +19,15 @@ type RepoFuncTmplPack struct {
 	IsUniqueKey bool
 }
 
-func (pack *RepoFuncTmplPack) Copy() *RepoFuncTmplPack {
-	params := make([]*RepoFuncTmplPackParam, len(pack.Params))
+func (pack *RepoKeyFuncTmplPack) Copy() *RepoKeyFuncTmplPack {
+	params := make([]*RepoKeyFuncTmplPackParam, len(pack.Params))
 	for index := range pack.Params {
-		params[index] = &RepoFuncTmplPackParam{
+		params[index] = &RepoKeyFuncTmplPackParam{
 			FieldName: pack.Params[index].FieldName,
 			ParamName: pack.Params[index].ParamName,
 		}
 	}
-	return &RepoFuncTmplPack{
+	return &RepoKeyFuncTmplPack{
 		KeyNameCombine:        pack.KeyNameCombine,
 		ModelType:             pack.ModelType,
 		Params:                params,
