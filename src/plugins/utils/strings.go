@@ -51,17 +51,31 @@ func buildSnakeCaseWords(ss []string) string {
 }
 
 func SplitCamelWords(s string) []string {
-	currentWord := new(strings.Builder)
-	words := make([]string, 0)
-	for _, r := range s {
-		if unicode.IsUpper(r) && currentWord.Len() > 0 {
-			words = append(words, currentWord.String())
-			currentWord.Reset()
-		}
-		currentWord.WriteRune(unicode.ToLower(r))
+	runes := []rune(s)
+	if len(runes) == 0 {
+		return nil
 	}
-	if currentWord.Len() > 0 {
-		words = append(words, currentWord.String())
+	words := make([]string, 0)
+	var b strings.Builder
+	for i, r := range runes {
+		if i == 0 {
+			b.WriteRune(unicode.ToLower(r))
+			continue
+		}
+		prev := runes[i-1]
+		nextIsLower := i+1 < len(runes) && unicode.IsLower(runes[i+1])
+		// Check if we're at the start of a new word (lowercase to uppercase, or uppercase sequence ending)
+		isNewWord := unicode.IsLower(prev) || (unicode.IsUpper(prev) && nextIsLower)
+		// Split when current char is uppercase and marks a new word boundary
+		shouldSplit := unicode.IsUpper(r) && isNewWord
+		if shouldSplit && b.Len() > 0 {
+			words = append(words, b.String())
+			b.Reset()
+		}
+		b.WriteRune(unicode.ToLower(r))
+	}
+	if b.Len() > 0 {
+		words = append(words, b.String())
 	}
 	return words
 }
