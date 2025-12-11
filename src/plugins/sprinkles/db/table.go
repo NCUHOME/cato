@@ -51,7 +51,6 @@ func (t *TableBasicSprinkle) Register(ctx *common.GenContext) error {
 	}
 	pack := &packs.TableBasicTmplPack{
 		MessageTypeName: ctx.GetNowMessage().GoIdent.GoName,
-		Comment:         t.value.GetComment(),
 	}
 	// set extension
 	mc := ctx.GetNowMessageContainer()

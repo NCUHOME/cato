@@ -198,11 +198,15 @@ func (mw *MessageWare) completeRepo(ctx *common.GenContext, params []*packs.Repo
 func (mw *MessageWare) repoImplRunner(runParams []*repoCompleteParam, params []*packs.RepoKeyFuncTmplPack) error {
 	var err error
 	for _, rp := range runParams {
-		noKeyPack := &packs.NoKeyFuncTmplPack{ModelType: rp.modelType}
+		modelType := rp.modelType
+		if !rp.isRepoSame {
+			modelType = fmt.Sprintf("%s.%s", modelImportAlias, rp.modelType)
+		}
+		noKeyPack := &packs.NoKeyFuncTmplPack{ModelType: modelType}
 		for _, param := range params {
 			cparam := param.Copy()
 			cparam.IsModelAnotherPackage = rp.isRepoSame
-			cparam.ModelType = rp.modelType
+			cparam.ModelType = modelType
 			cparam.Tmpls = append(cparam.Tmpls, rp.tmpls...)
 			if cparam.IsUniqueKey {
 				cparam.Tmpls = append(cparam.Tmpls, rp.ukTmpls...)
@@ -248,7 +252,7 @@ func (mw *MessageWare) loadKeyTmplPacks(ctx *common.GenContext) []*packs.RepoKey
 		case generated.DBKeyType_CATO_DB_KEY_TYPE_PRIMARY, generated.DBKeyType_CATO_DB_KEY_TYPE_UNIQUE:
 			pack.FetchFuncName = repoFetchOneFuncName
 			pack.IsUniqueKey = true
-		case generated.DBKeyType_CATO_DB_KEY_TYPE_COMBINE:
+		case generated.DBKeyType_CATO_DB_KEY_TYPE_COMBINE, generated.DBKeyType_CATO_DB_KEY_TYPE_INDEX:
 			pack.FetchFuncName = repoFetchAllFuncName
 		}
 		keysTmplPack = append(keysTmplPack, pack)
