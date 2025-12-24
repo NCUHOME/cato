@@ -16,3 +16,8 @@ message HttpOptions {
   string group_prefix = 1;
   bool as_http_service = 2;
 }
+
+
+message HttpParamOption {
+  bool impl = 1;
+}

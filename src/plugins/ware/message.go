@@ -302,6 +302,8 @@ func (mw *MessageWare) generateModelRepoFiles(ctx *common.GenContext) ([]*models
 		ModelPackageAlias:     modelImportAlias,
 		ModelPackage:          modelPack.ImportPath,
 		RepoFuncs:             mc.GetRepo(),
+		RdbPackage:            fc.GetRdbRepoPackage().ImportPath,
+		ModelType:             ctx.GetNowMessageTypeName(),
 	}
 	files := make([]*models.GenerateFileDesc, 0)
 	sw := new(strings.Builder)
@@ -316,11 +318,11 @@ func (mw *MessageWare) generateModelRepoFiles(ctx *common.GenContext) ([]*models
 		CheckExists: false,
 	})
 	extraSw := new(strings.Builder)
-	err = config.GetTemplate(config.RepoRepoTmpl).Execute(extraSw, pack)
+	err = config.GetTemplate(config.RepoExtTmpl).Execute(extraSw, pack)
 	if err != nil {
 		return nil, err
 	}
-	filename = filepath.Join(repoPack.ImportPath, fmt.Sprintf("%s_repo.go", mw.filename()))
+	filename = filepath.Join(repoPack.ImportPath, fmt.Sprintf("extension.go"))
 	files = append(files, &models.GenerateFileDesc{
 		Name:        filename,
 		Content:     extraSw.String(),
@@ -368,17 +370,6 @@ func (mw *MessageWare) generateModelRdbFiles(ctx *common.GenContext) ([]*models.
 		Name:        filename,
 		Content:     sw.String(),
 		CheckExists: false,
-	})
-	extraSw := new(strings.Builder)
-	err = config.GetTemplate(config.RdbRepoTmpl).Execute(extraSw, pack)
-	if err != nil {
-		return nil, err
-	}
-	filename = filepath.Join(rdbPack.ImportPath, fmt.Sprintf("%s_rdb.go", mw.filename()))
-	files = append(files, &models.GenerateFileDesc{
-		Name:        filename,
-		Content:     extraSw.String(),
-		CheckExists: true,
 	})
 	return files, nil
 }

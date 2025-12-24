@@ -11,7 +11,9 @@ type {{.ServiceName}}ServiceTier interface {
 }
 
 type {{.ServiceName}}ServiceContainer interface {
-    Set(method string, path string, runner  func(w http.ResponseWriter, r *http.Request))
-    Get(method string, path string) (func(w http.ResponseWriter, r *http.Request), bool)
+    Set(key string, runner  func(w http.ResponseWriter, r *http.Request))
+    Get(key string) (func(w http.ResponseWriter, r *http.Request), bool)
     ToMap() map[string]http.HandlerFunc
+    EncodeKey(method, path string) string
+    DecodeKey(key string) (string, string, error)
 }

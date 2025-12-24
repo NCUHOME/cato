@@ -22,6 +22,7 @@ type MessageTray struct {
 	scopeGroupCols map[string][]string
 
 	needExtraFile bool
+	asParam       bool
 }
 
 func NewMessageTray() *MessageTray {
@@ -206,4 +207,12 @@ func (mc *MessageTray) SetNeedExtraFile(need bool) {
 
 func (mc *MessageTray) IsNeedExtraFile() bool {
 	return mc.needExtraFile
+}
+
+func (mc *MessageTray) IsAsParam() bool {
+	return mc.asParam
+}
+
+func (mc *MessageTray) SetAsParam(b bool) {
+	mc.asParam = b
 }

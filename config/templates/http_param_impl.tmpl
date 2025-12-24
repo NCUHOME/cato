@@ -1,0 +1,23 @@
+func (m *{{.ModelType}}) GetCode() string {
+    return m.Code
+}
+
+func (m *{{.ModelType}}) SetCode(code string) {
+    m.Code = code
+}
+
+func (m *{{.ModelType}}) GetMessage() string {
+    return m.Message
+}
+
+func (m *{{.ModelType}}) SetMessage(message string) {
+    m.Message = message
+}
+
+func (m *{{.ModelType}}) GetBody() interface{} {
+    return m.Body
+}
+
+func (m *{{.ModelType}}) ResetBody(){
+    m.Body = nil
+}

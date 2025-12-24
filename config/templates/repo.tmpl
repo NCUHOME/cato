@@ -10,6 +10,20 @@ import (
     {{- end}}
 )
 
+var (
+	repo Repo
+)
+
+func GetRepo() Repo {
+	return repo
+}
+
+type Repo interface {
+	basic
+	extension
+}
+
+
 type basic interface {
 	{{- range .RepoFuncs}}
 	{{.}}

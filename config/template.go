@@ -26,14 +26,13 @@ const (
 	ColsGroupTmpl   = "cols_group.tmpl"
 
 	RdbTmpl       = "rdb.tmpl"
-	RdbRepoTmpl   = "rdb_repo.tmpl"
 	RdbDeleteTmpl = "rdb_delete.tmpl"
 	RdbFetchTmpl  = "rdb_fetch.tmpl"
 	RdbUpdateTmpl = "rdb_update.tmpl"
 	RdbInsertTmpl = "rdb_insert.tmpl"
 
 	RepoTmpl       = "repo.tmpl"
-	RepoRepoTmpl   = "repo_repo.tmpl"
+	RepoExtTmpl    = "repo_ext.tmpl"
 	RepoDeleteTmpl = "repo_delete.tmpl"
 	RepoFetchTmpl  = "repo_fetch.tmpl"
 	RepoUpdateTmpl = "repo_update.tmpl"
@@ -44,6 +43,7 @@ const (
 	HttpProtocolTmpl        = "http_protocol.tmpl"
 	HttpProtocolMethodTmpl  = "http_protocol_method.tmpl"
 	HttpProtocolTierTmpl    = "http_protocol_tier.tmpl"
+	HttpParamImplTmpl       = "http_param_impl.tmpl"
 )
 
 var (
@@ -69,14 +69,13 @@ var templateNames = []string{
 	ColsGroupTmpl,
 
 	RepoTmpl,
-	RepoRepoTmpl,
+	RepoExtTmpl,
 	RepoDeleteTmpl,
 	RepoFetchTmpl,
 	RepoUpdateTmpl,
 	RepoInsertTmpl,
 
 	RdbTmpl,
-	RdbRepoTmpl,
 	RdbDeleteTmpl,
 	RdbFetchTmpl,
 	RdbUpdateTmpl,
@@ -87,6 +86,7 @@ var templateNames = []string{
 	HttpProtocolTmpl,
 	HttpProtocolMethodTmpl,
 	HttpProtocolTierTmpl,
+	HttpParamImplTmpl,
 }
 
 func init() {
