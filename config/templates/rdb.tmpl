@@ -6,14 +6,25 @@ import (
 	"context"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/ncuhome/cato/core/rdb"
 
     {{- if not .IsModelAnotherPackage}}
 	{{.ModelPackageAlias}} "{{.ModelPackage}}"
 	{{- end}}
 )
 
+type RdbRepo{{.ModelType}} struct {
+	basicRepo
+	e rdb.Engine[{{.ModelPackageAlias}}.{{.ModelType}}]
+}
+
+func NewRdbRepo{{.ModelType}}(eg rdb.Engine[{{.ModelPackageAlias}}.{{.ModelType}}]) *RdbRepo{{.ModelType}} {
+	return &RdbRepo{{.ModelType}}{basicRepo: basicRepo{eg}, e: eg}
+}
+
+
 type basicRepo struct {
-	engine
+    rdb.Engine[{{.ModelPackageAlias}}.{{.ModelType}}]
 }
 
 

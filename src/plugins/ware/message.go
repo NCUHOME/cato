@@ -198,11 +198,15 @@ func (mw *MessageWare) completeRepo(ctx *common.GenContext, params []*packs.Repo
 func (mw *MessageWare) repoImplRunner(runParams []*repoCompleteParam, params []*packs.RepoKeyFuncTmplPack) error {
 	var err error
 	for _, rp := range runParams {
-		noKeyPack := &packs.NoKeyFuncTmplPack{ModelType: rp.modelType}
+		modelType := rp.modelType
+		if !rp.isRepoSame {
+			modelType = fmt.Sprintf("%s.%s", modelImportAlias, rp.modelType)
+		}
+		noKeyPack := &packs.NoKeyFuncTmplPack{ModelType: modelType}
 		for _, param := range params {
 			cparam := param.Copy()
 			cparam.IsModelAnotherPackage = rp.isRepoSame
-			cparam.ModelType = rp.modelType
+			cparam.ModelType = modelType
 			cparam.Tmpls = append(cparam.Tmpls, rp.tmpls...)
 			if cparam.IsUniqueKey {
 				cparam.Tmpls = append(cparam.Tmpls, rp.ukTmpls...)
@@ -248,7 +252,7 @@ func (mw *MessageWare) loadKeyTmplPacks(ctx *common.GenContext) []*packs.RepoKey
 		case generated.DBKeyType_CATO_DB_KEY_TYPE_PRIMARY, generated.DBKeyType_CATO_DB_KEY_TYPE_UNIQUE:
 			pack.FetchFuncName = repoFetchOneFuncName
 			pack.IsUniqueKey = true
-		case generated.DBKeyType_CATO_DB_KEY_TYPE_COMBINE:
+		case generated.DBKeyType_CATO_DB_KEY_TYPE_COMBINE, generated.DBKeyType_CATO_DB_KEY_TYPE_INDEX:
 			pack.FetchFuncName = repoFetchAllFuncName
 		}
 		keysTmplPack = append(keysTmplPack, pack)
@@ -298,6 +302,8 @@ func (mw *MessageWare) generateModelRepoFiles(ctx *common.GenContext) ([]*models
 		ModelPackageAlias:     modelImportAlias,
 		ModelPackage:          modelPack.ImportPath,
 		RepoFuncs:             mc.GetRepo(),
+		RdbPackage:            fc.GetRdbRepoPackage().ImportPath,
+		ModelType:             ctx.GetNowMessageTypeName(),
 	}
 	files := make([]*models.GenerateFileDesc, 0)
 	sw := new(strings.Builder)
@@ -312,11 +318,11 @@ func (mw *MessageWare) generateModelRepoFiles(ctx *common.GenContext) ([]*models
 		CheckExists: false,
 	})
 	extraSw := new(strings.Builder)
-	err = config.GetTemplate(config.RepoRepoTmpl).Execute(extraSw, pack)
+	err = config.GetTemplate(config.RepoExtTmpl).Execute(extraSw, pack)
 	if err != nil {
 		return nil, err
 	}
-	filename = filepath.Join(repoPack.ImportPath, fmt.Sprintf("%s_repo.go", mw.filename()))
+	filename = filepath.Join(repoPack.ImportPath, fmt.Sprintf("extension.go"))
 	files = append(files, &models.GenerateFileDesc{
 		Name:        filename,
 		Content:     extraSw.String(),
@@ -364,17 +370,6 @@ func (mw *MessageWare) generateModelRdbFiles(ctx *common.GenContext) ([]*models.
 		Name:        filename,
 		Content:     sw.String(),
 		CheckExists: false,
-	})
-	extraSw := new(strings.Builder)
-	err = config.GetTemplate(config.RdbRepoTmpl).Execute(extraSw, pack)
-	if err != nil {
-		return nil, err
-	}
-	filename = filepath.Join(rdbPack.ImportPath, fmt.Sprintf("%s_rdb.go", mw.filename()))
-	files = append(files, &models.GenerateFileDesc{
-		Name:        filename,
-		Content:     extraSw.String(),
-		CheckExists: true,
 	})
 	return files, nil
 }

@@ -33,3 +33,7 @@ func (handler *{{.ServiceName}}HttpHandler) GetRoutersMap() map[string]http.Hand
 func (handler *{{.ServiceName}}HttpHandler) GetRouterGroupBase() string {
 	return "{{.RouterBasePath}}"
 }
+
+func (handler *{{.ServiceName}}HttpHandler) DecodeKey(key string) (string, string, error) {
+	return handler.container.DecodeKey(key)
+}

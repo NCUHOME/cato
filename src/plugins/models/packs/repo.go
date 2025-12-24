@@ -6,4 +6,6 @@ type RepoTmplPack struct {
 	ModelPackageAlias     string
 	ModelPackage          string
 	RepoFuncs             []string
+	RdbPackage            string
+	ModelType             string
 }
