@@ -3,18 +3,20 @@ package {{.HttpHandlerPackage}}
 
 import (
 	"net/http"
+
+	"github.com/ncuhome/cato/core/httpc"
 )
 
 type {{.ServiceName}}HttpHandler struct {
 	service   {{.ServiceName}}Service
 	tier      {{.ServiceName}}ServiceTier
-	container {{.ServiceName}}ServiceContainer
+	container httpc.Container
 }
 
 func New{{.ServiceName}}HttpHandler(
     service {{.ServiceName}}Service,
     tier {{.ServiceName}}ServiceTier,
-    container {{.ServiceName}}ServiceContainer,
+    container httpc.Container,
 ) *{{.ServiceName}}HttpHandler {
     s := new({{.ServiceName}}HttpHandler)
     s.service = service
