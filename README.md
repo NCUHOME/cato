@@ -41,3 +41,10 @@ Similarly, for Golang server projects, Cato aims to ensure your projects always 
 ## 🛣️ Roadmap
 
 There's still a lot to be done. Many features and improvements are planned for future releases.
+
++ [ ] Create a universal package, abstracting the base `interface`
++ [ ] Support `DDL` statement generation and DB Migrate
++ [ ] Support `enum` type generation
++ [ ] Optimize the generation method for `Rdb` and `Repo`
++ [ ] Optimize the global passing of `generator context`
++ [ ] ...
