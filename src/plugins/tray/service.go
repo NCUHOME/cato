@@ -6,11 +6,12 @@ import (
 )
 
 type ServiceTray struct {
-	register   []*strings.Builder
-	methods    []*strings.Builder
-	tiers      []*strings.Builder
-	imports    []*strings.Builder
-	routerPath string
+	register        []*strings.Builder
+	methods         []*strings.Builder
+	tiers           []*strings.Builder
+	imports         []*strings.Builder
+	routerPath      string
+	registerHttpApi bool
 }
 
 func (sc *ServiceTray) GetMethods() []string {
@@ -71,6 +72,14 @@ func (sc *ServiceTray) SetRouterBasePath(path string) {
 
 func (sc *ServiceTray) GetRouterBasePath() string {
 	return sc.routerPath
+}
+
+func (sc *ServiceTray) IsRegisterHttpApi() bool {
+	return sc.registerHttpApi
+}
+
+func (sc *ServiceTray) SetRegisterHttpApi(b bool) {
+	sc.registerHttpApi = b
 }
 
 func NewServiceTray() *ServiceTray {

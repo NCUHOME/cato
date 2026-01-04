@@ -93,7 +93,7 @@ func (fw *FieldWare) Active(ctx *common.GenContext) (bool, error) {
 func (fw *FieldWare) Complete(ctx *common.GenContext) error {
 	wr := ctx.GetNowMessageContainer().BorrowFieldWriter()
 	// register into field writer
-	fieldType := common.MapperGoTypeNameFromField(ctx, fw.field.Desc)
+	fieldType := common.MapperGoTypeNameFromField(ctx, fw.field.Desc).GoType()
 	// json trans will change field type when field has json tag
 	// origin field will become string type to load json raw value
 	// but need better way to check if field has json-trans tag

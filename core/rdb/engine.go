@@ -10,3 +10,9 @@ type Engine[T any] interface {
 	Exec(ctx context.Context, table, sql string, args ...interface{}) (int64, error)
 	Count(ctx context.Context, table, sql string, args ...interface{}) (int64, error)
 }
+
+type Tx interface {
+	Begin() error
+	Commit() error
+	Rollback() error
+}

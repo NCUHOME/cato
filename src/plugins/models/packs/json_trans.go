@@ -5,5 +5,6 @@ type JsonTransTmplPack struct {
 	FieldName       string
 	FieldType       string
 	FieldTypeRaw    string
+	IsSlice         bool
 	LazyLoad        bool
 }

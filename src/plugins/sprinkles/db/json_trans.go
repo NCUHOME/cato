@@ -56,7 +56,7 @@ func (j *JsonTransSprinkle) Register(ctx *common.GenContext) error {
 		extraField := &packs.FieldPack{
 			Field: &models.Field{
 				Name:   fmt.Sprintf("inner%s", nowField.GoName),
-				GoType: fieldType,
+				GoType: fieldType.GoType(),
 			},
 		}
 		writer := ctx.GetNowMessageContainer().BorrowFieldWriter()
@@ -73,8 +73,9 @@ func (j *JsonTransSprinkle) Register(ctx *common.GenContext) error {
 	pack := &packs.JsonTransTmplPack{
 		MessageTypeName: ctx.GetNowMessageTypeName(),
 		FieldName:       nowField.GoName,
-		FieldType:       fieldType,
-		FieldTypeRaw:    common.UnwrapPointType(fieldType),
+		FieldType:       fieldType.GoType(),
+		FieldTypeRaw:    fieldType.RawType(),
+		IsSlice:         fieldType.IsSlice,
 		LazyLoad:        j.value.JsonTrans.LazyLoad,
 	}
 	return config.GetTemplate(config.JsonTransTmpl).Execute(mWriter, pack)
