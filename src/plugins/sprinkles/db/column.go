@@ -62,11 +62,11 @@ func (c *ColFieldSprinkle) addColInfo(ctx *common.GenContext) error {
 	mc := ctx.GetNowMessageContainer()
 	field := ctx.GetNowField()
 	fieldType := common.MapperGoTypeNameFromField(ctx, field.Desc)
-	// todo: need a better way to check if set string type
-	if field.Desc.Kind() == protoreflect.MessageKind {
-		fieldType = "string"
+	fieldTargetType := fieldType.GoType()
+	if fieldType.IsSlice || fieldType.IsStruct {
+		fieldTargetType = "string"
 	}
-	fieldPack := &models.Field{Name: field.GoName, GoType: fieldType}
+	fieldPack := &models.Field{Name: field.GoName, GoType: fieldTargetType}
 	colDesc := c.value.GetColDesc()
 	if colDesc == nil {
 		return nil
@@ -81,7 +81,7 @@ func (c *ColFieldSprinkle) addColInfo(ctx *common.GenContext) error {
 		MessageTypeName: ctx.GetNowMessageTypeName(),
 		FieldName:       field.GoName,
 		ColName:         colName,
-		FieldType:       fieldType,
+		FieldType:       fieldTargetType,
 	}
 	tmpl := config.GetTemplate(config.ColArrivalTmpl)
 	err := tmpl.Execute(mc.BorrowMethodsWriter(), colArrivalPack)

@@ -4,7 +4,11 @@ func (model *{{ .MessageTypeName}}) Get{{.FieldName}}() ({{.FieldType}}, error) 
         return model.inner{{.FieldName}}, nil
     }
     {{- end}}
+    {{- if .IsSlice}}
+    data := make({{.FieldType}}, 0)
+    {{- else}}
     data := new({{.FieldTypeRaw}})
+    {{- end}}
     if err := json.Unmarshal([]byte(model.{{.FieldName}}), data); err != nil {
         return nil, err
     }

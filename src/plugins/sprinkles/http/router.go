@@ -49,6 +49,9 @@ func (r *RouterSprinkle) Register(ctx *common.GenContext) error {
 		return nil
 	}
 	fc := ctx.GetNowServiceContainer()
+	if !fc.IsRegisterHttpApi() {
+		return nil
+	}
 	for _, i := range extraImport {
 		_, err := fc.BorrowExtraImportReader().Write([]byte(i))
 		if err != nil {
@@ -80,8 +83,8 @@ func (r *RouterSprinkle) registerMethod(ctx *common.GenContext) error {
 	method := ctx.GetNowMethod()
 	pack := &packs.RouterProtocolMethodTmplPack{
 		MethodName:   method.GoName,
-		RequestType:  common.MapperGoTypeNameFromMessage(ctx, method.Input.Desc),
-		ResponseType: common.MapperGoTypeNameFromMessage(ctx, method.Output.Desc),
+		RequestType:  common.MapperGoTypeNameFromMessage(ctx, method.Input.Desc).GoType(),
+		ResponseType: common.MapperGoTypeNameFromMessage(ctx, method.Output.Desc).GoType(),
 	}
 	writer := ctx.GetNowServiceContainer().BorrowMethodsWriter()
 	return config.GetTemplate(config.HttpProtocolMethodTmpl).Execute(writer, pack)
@@ -91,8 +94,8 @@ func (r *RouterSprinkle) RegisterTier(ctx *common.GenContext) error {
 	method := ctx.GetNowMethod()
 	pack := &packs.RouterProtocolTierTmplPack{
 		MethodName:   method.GoName,
-		RequestType:  common.MapperGoTypeNameFromMessage(ctx, method.Input.Desc),
-		ResponseType: common.MapperGoTypeNameFromMessage(ctx, method.Output.Desc),
+		RequestType:  common.MapperGoTypeNameFromMessage(ctx, method.Input.Desc).GoType(),
+		ResponseType: common.MapperGoTypeNameFromMessage(ctx, method.Output.Desc).GoType(),
 	}
 	writer := ctx.GetNowServiceContainer().BorrowTiersWriter()
 	return config.GetTemplate(config.HttpProtocolTierTmpl).Execute(writer, pack)

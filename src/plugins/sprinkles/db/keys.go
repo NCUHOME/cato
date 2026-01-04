@@ -42,7 +42,7 @@ func (f *FieldKeysSprinkle) Register(ctx *common.GenContext) error {
 	fieldType := common.MapperGoTypeNameFromField(ctx, nowField.Desc)
 	field := &models.Field{
 		Name:   fieldName,
-		GoType: fieldType,
+		GoType: fieldType.GoType(),
 	}
 	mc := ctx.GetNowMessageContainer()
 	for index := range f.values {
