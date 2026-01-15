@@ -13,12 +13,6 @@ var (
 	ErrInvalidHandlerMapKey = errors.New("InvalidHandlerMapKey")
 )
 
-func NewBasicMapContainer() Container {
-	c := new(BasicMapContainer)
-	c.Init()
-	return c
-}
-
 type BasicMapContainer struct {
 	c    *sync.Mutex
 	data map[string]http.HandlerFunc

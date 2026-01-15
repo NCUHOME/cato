@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"golang.org/x/tools/imports"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 
@@ -31,14 +32,15 @@ func NewCatoGenerator(req *pluginpb.CodeGeneratorRequest) *CatoGenerator {
 
 func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 	genOption, err := protogen.Options{}.New(g.req)
-	outdir := flags.ParseProtoOptFlag(g.req.GetParameter())[flags.FlagExtOutDir]
+	outdir := g.params[flags.FlagExtOutDir]
 	if err != nil {
 		log.Fatalln(err)
 	}
 	respFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0)
+	root := new(common.GenContext).Init()
 	for _, file := range genOption.Files {
 		fc := ware.NewFileWare(file)
-		ctx := fc.RegisterContext(new(common.GenContext))
+		ctx := fc.RegisterContext(root)
 		_, err = ware.CommonWareActive(ctx, fc)
 		if err != nil {
 			log.Fatalln(err)
@@ -69,11 +71,28 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 			log.Fatalln(err)
 		}
 	}
+	if root.NeedDoc() {
+		err = root.GenerateSwagger()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 	return respFiles
 }
 
 func (g *CatoGenerator) outputContent(filename, content string) *pluginpb.CodeGeneratorResponse_File {
-	c, err := format.Source([]byte(content))
+	options := &imports.Options{
+		TabWidth:  4,
+		TabIndent: true,
+		Comments:  true,
+		Fragment:  true,
+	}
+	c, err := imports.Process("", []byte(content), options)
+	if err != nil {
+		log.Fatalf("[-] cato import %s file content %s error\n", filename, content)
+	}
+	// 使用go/format进行标准格式化
+	c, err = format.Source(c)
 	if err != nil {
 		log.Fatalf("[-] cato formatted %s file content %s error\n", filename, content)
 	}

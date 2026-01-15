@@ -8,6 +8,7 @@ import (
 	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/models/packs"
 	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
@@ -62,7 +63,8 @@ func (r *RouterSprinkle) Register(ctx *common.GenContext) error {
 	return errors.Join(
 		r.registerHandler(ctx),
 		r.registerMethod(ctx),
-		r.RegisterTier(ctx),
+		r.registerTier(ctx),
+		r.registerSwagger(ctx),
 	)
 }
 
@@ -90,7 +92,7 @@ func (r *RouterSprinkle) registerMethod(ctx *common.GenContext) error {
 	return config.GetTemplate(config.HttpProtocolMethodTmpl).Execute(writer, pack)
 }
 
-func (r *RouterSprinkle) RegisterTier(ctx *common.GenContext) error {
+func (r *RouterSprinkle) registerTier(ctx *common.GenContext) error {
 	method := ctx.GetNowMethod()
 	pack := &packs.RouterProtocolTierTmplPack{
 		MethodName:   method.GoName,
@@ -99,4 +101,31 @@ func (r *RouterSprinkle) RegisterTier(ctx *common.GenContext) error {
 	}
 	writer := ctx.GetNowServiceContainer().BorrowTiersWriter()
 	return config.GetTemplate(config.HttpProtocolTierTmpl).Execute(writer, pack)
+}
+
+func (r *RouterSprinkle) registerSwagger(ctx *common.GenContext) error {
+	if !ctx.NeedDoc() {
+		return nil
+	}
+	method := r.value.GetMethod()
+	comment := ctx.GetNowMethod().Comments.Leading.String()
+	route := &models.SwaggerRoute{
+		Description: comment,
+		Produces:    []string{"application/json"},
+		Requests: &models.SwaggerMessageRef{
+			FullName: string(ctx.GetNowMethodContainer().Request().Desc.FullName()),
+		},
+		Responses: &models.SwaggerMessageRef{
+			FullName: string(ctx.GetNowMethodContainer().Response().Desc.FullName()),
+		},
+	}
+	switch method {
+	case "GET":
+		route.Requests.Location = "query"
+	default:
+		route.Requests.Location = "body"
+		route.Consumes = []string{"application/json"}
+	}
+	ctx.AddDocApi(r.value.Router, method, route)
+	return nil
 }

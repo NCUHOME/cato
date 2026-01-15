@@ -15,9 +15,22 @@ message RouterOptions {
 message HttpOptions {
   string group_prefix = 1;
   bool as_http_service = 2;
+  string swagger_loc = 3;
+  string host = 4;
 }
-
 
 message HttpParamOption {
   bool impl = 1;
+  string example = 2;
+  string extra_desc = 3;
+}
+
+message HttpParamFieldOption {
+  string example = 1;
+  string name = 2;
+  string format = 3;
+  string extra_desc = 4;
+  bool must = 5;
+  bool skip = 6;
+  string pattern = 7;
 }

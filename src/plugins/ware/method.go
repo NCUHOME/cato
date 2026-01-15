@@ -33,6 +33,8 @@ func (mw *MethodWare) GetSubWares() []WorkWare {
 
 func (mw *MethodWare) RegisterContext(gc *common.GenContext) *common.GenContext {
 	mc := tray.NewMethodTray()
+	mc.SetRequest(mw.method.Input)
+	mc.SetResponse(mw.method.Output)
 	ctx := gc.WithMethod(mw.method, mc)
 	return ctx
 }

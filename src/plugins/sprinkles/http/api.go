@@ -5,6 +5,7 @@ import (
 
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
+	"github.com/ncuhome/cato/src/plugins/models"
 	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
 
@@ -38,5 +39,16 @@ func (a *ApiSprinkle) Register(ctx *common.GenContext) error {
 	fc := ctx.GetNowServiceContainer()
 	fc.SetRouterBasePath(a.value.GroupPrefix)
 	fc.SetRegisterHttpApi(a.value.AsHttpService)
+	if !ctx.NeedDoc() {
+		return nil
+	}
+	name := string(ctx.GetNowService().Desc.Name())
+	tag := &models.SwaggerTag{Name: name, Description: name}
+	sv := &models.SwaggerApis{
+		Tags:       []*models.SwaggerTag{tag},
+		BasePath:   a.value.GroupPrefix,
+		Containers: make(map[string]map[string]*models.SwaggerRoute),
+	}
+	ctx.AddDocService(name, sv)
 	return nil
 }
