@@ -4,6 +4,8 @@ import "strings"
 
 const (
 	FlagExtOutDir = "ext_out_dir"
+	SwaggerPath   = "swagger_path"
+	ApiHost       = "api_host"
 )
 
 func ParseProtoOptFlag(param string) map[string]string {

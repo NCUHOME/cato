@@ -22,7 +22,8 @@ extend google.protobuf.MessageOptions {
   cato.db.DdlOptions ddl_opt = 60003;
 
   cato.struct.StructOption struct_opt = 61001;
-  cato.http.HttpParamOption http_param_opt = 61002;
+
+  cato.http.HttpParamOption http_param_opt = 62001;
 }
 
 extend google.protobuf.FieldOptions {
@@ -30,6 +31,8 @@ extend google.protobuf.FieldOptions {
   cato.db.ColumnOption column_opt = 70001;
 
   cato.struct.ImplementOption impl_opt = 71001;
+
+  cato.http.HttpParamFieldOption http_pf_opt = 72001;
 }
 
 extend google.protobuf.ServiceOptions {
