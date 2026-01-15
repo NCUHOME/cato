@@ -15,8 +15,6 @@ message RouterOptions {
 message HttpOptions {
   string group_prefix = 1;
   bool as_http_service = 2;
-  string swagger_loc = 3;
-  string host = 4;
 }
 
 message HttpParamOption {
