@@ -37,7 +37,7 @@ func (g *CatoGenerator) Generate() []*pluginpb.CodeGeneratorResponse_File {
 		log.Fatalln(err)
 	}
 	respFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0)
-	root := new(common.GenContext).Init()
+	root := new(common.GenContext).Init(g.params)
 	for _, file := range genOption.Files {
 		fc := ware.NewFileWare(file)
 		ctx := fc.RegisterContext(root)
