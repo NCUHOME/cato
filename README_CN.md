@@ -32,12 +32,14 @@ Cato 当前的能力通过 `proto-gen-*` 系列的插件来提供。
 #### 安装
 ```shell
 go install -v github.com/ncuhome/cato/cmd/protoc-gen-cato@latest
+```
+
 #### 使用
 首先需要引用`proto`文件夹下的`*.proto`文件，将proto文件下载到本地。
 
 ```shell
 # 注意：将 /cato/proto/path 替换为您本地的 `cato/proto` 目录路径。
-protoc -I=your/project/proto/path -I=/cato/proto/path --cato_out=../ --cato_opt=ext_out_dir=../,swagger_path=locus_swagger.json,api_host=localhost path/to/your/file.proto
+protoc -I=your/project/proto/path -I=/cato/proto/path --cato_out=../ --cato_opt=ext_out_dir=../,swagger_path=swagger.json,api_host=localhost path/to/your/file.proto
 ```
 
 + `ext_out_dir`：是cato生成文件的基础目录，应与cato_out保持一致。

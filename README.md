@@ -37,7 +37,7 @@ go install -v github.com/ncuhome/cato/cmd/protoc-gen-cato@latest
 First, you need to reference the `*.proto` files from the `proto` directory. Download the proto files locally.
 ```shell
 # Note: Replace /cato/proto/path with your local path to the `cato/proto` directory.
-protoc -I=your/project/proto/path -I=/cato/proto/path --cato_out=../ --cato_opt=ext_out_dir=../,swagger_path=locus_swagger.json,api_host=localhost path/to/your/file.proto
+protoc -I=your/project/proto/path -I=/cato/proto/path --cato_out=../ --cato_opt=ext_out_dir=../,swagger_path=swagger.json,api_host=localhost path/to/your/file.proto
 ```
 + `ext_out_dir`: The base directory for Cato's generated files, which should be consistent with `cato_out`.
 + `swagger_path`: If you need to generate OpenAPI documentation, specify the path for the `swagger.json` file.
