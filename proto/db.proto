@@ -6,8 +6,16 @@ option go_package = "github.com/ncuhome/cato/generated";
 import "cato/proto/struct.proto";
 
 
+enum DbTypeEnum {
+  CATO_DB_TYPE_INVALID = 0;
+  CATO_DB_TYPE_MYSQL = 1;
+  CATO_DB_TYPE_POSTGRESQL = 2;
+  CATO_DB_TYPE_SQLITE3 = 3;
+}
+
 message DbOption {
   string name = 1;
+  DbTypeEnum db_type = 2;
 }
 
 message DdlOptions {

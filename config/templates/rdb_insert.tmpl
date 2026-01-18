@@ -8,7 +8,8 @@ func (b *basicRepo) Insert(ctx context.Context, data map[string]interface{}) err
 		values[index] = value
 		index++
 	}
-	sql, args, err := squirrel.Insert(container.TableName()).Columns(cols...).Values(values...).ToSql()
+	builder := new(squirrel.StatementBuilderType).PlaceholderFormat(container.Placeholder())
+	sql, args, err := builder.Insert(container.TableName()).Columns(cols...).Values(values...).ToSql()
 	if err != nil {
 		return err
 	}

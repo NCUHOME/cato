@@ -16,3 +16,7 @@ type Tx interface {
 	Commit() error
 	Rollback() error
 }
+
+type Placeholder interface {
+	GetSqlPlaceholder() string
+}
