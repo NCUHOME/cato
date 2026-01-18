@@ -32,6 +32,7 @@ Cato 当前的能力通过 `proto-gen-*` 系列的插件来提供。
 #### 安装
 ```shell
 go install -v github.com/ncuhome/cato/cmd/protoc-gen-cato@latest
+```
 #### 使用
 首先需要引用`proto`文件夹下的`*.proto`文件，将proto文件下载到本地。
 
