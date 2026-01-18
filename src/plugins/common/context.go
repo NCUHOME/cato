@@ -203,12 +203,11 @@ func (gc *GenContext) AddDocApi(path, method string, api *models.SwaggerRoute) {
 		log.Printf("WARNING: service %s not found in swagger apis", serviceName)
 		return
 	}
-	log.Printf("%s %s", method, path)
 	sv.AddRoute(path, method, api)
 }
 
 func (gc *GenContext) GenerateSwagger() error {
-	f, err := os.OpenFile("swagger.json", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0755)
+	f, err := os.OpenFile(gc.swagger.doc.Loc, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0755)
 	if err != nil {
 		return err
 	}

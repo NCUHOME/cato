@@ -4,7 +4,8 @@ func (b *basicRepo) UpdateBy{{.KeyNameCombine}}(ctx context.Context, data map[st
 	    container.GetCol{{.FieldName}}(): container.{{.FieldName}},
 	    {{- end}}
 	}
-	sql, args, err := squirrel.Update(container.TableName()).SetMap(data).Where(cond).ToSql()
+	builder := new(squirrel.StatementBuilderType).PlaceholderFormat(container.Placeholder())
+	sql, args, err := builder.Update(container.TableName()).SetMap(data).Where(cond).ToSql()
 	if err != nil {
     		return err
     }

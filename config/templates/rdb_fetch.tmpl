@@ -4,7 +4,8 @@ func (b *basicRepo) FindBy{{.KeyNameCombine}}(ctx context.Context, container *{{
 	    container.GetCol{{.FieldName}}(): container.{{.FieldName}},
 	    {{- end}}
 	}
-	sql, args, err := squirrel.Select(container.AllCols()...).From(container.TableName()).Where(cond).ToSql()
+	builder := new(squirrel.StatementBuilderType).PlaceholderFormat(container.Placeholder())
+	sql, args, err := builder.Select(container.AllCols()...).From(container.TableName()).Where(cond).ToSql()
 	if err != nil {
 		return nil, err
 	}
