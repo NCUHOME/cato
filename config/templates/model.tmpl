@@ -1,3 +1,7 @@
+var (
+    empty = new({{.ModelName}})
+)
+
 type {{ .ModelName }} struct {
 {{- range .Fields }}
     {{ . }}
