@@ -14,6 +14,16 @@ func (model *{{.MessageTypeName}}) ToMap() map[string]interface{} {
     }
 }
 
+func (model *{{ .MessageTypeName }}) ToMapWithoutEmpy() map[string]interface{} {
+    data := make(map[string]interface{})
+    {{- range .Cols}}
+    if model.{{.Name}} != empty.{{.Name}} {
+        data[model.GetCol{{.Name}}()] = model.{{.Name}}
+    }
+    {{- end}}
+    return data
+}
+
 func (model *{{.MessageTypeName}}) FromMap(data map[string]interface{}) {
     var (
         ok bool

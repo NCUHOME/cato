@@ -139,11 +139,11 @@ func (mw *MessageWare) completeCols(ctx *common.GenContext) error {
 	}
 	// check if it has col groups
 	colGroups := mc.GetColGroups()
-	for groupName, cols := range colGroups {
+	for groupName, cls := range colGroups {
 		groupPack := &packs.ColsGroupPack{
 			MessageTypeName: ctx.GetNowMessageTypeName(),
 			GroupName:       groupName,
-			Cols:            cols,
+			Cols:            cls,
 		}
 		colGroupTmpl := config.GetTemplate(config.ColsGroupTmpl)
 
