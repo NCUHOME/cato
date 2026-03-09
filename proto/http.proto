@@ -18,9 +18,8 @@ message HttpOptions {
 }
 
 message HttpParamOption {
-  bool impl = 1;
-  string example = 2;
-  string extra_desc = 3;
+  string example = 1;
+  string extra_desc = 2;
 }
 
 message HttpParamFieldOption {

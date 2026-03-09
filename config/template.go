@@ -42,7 +42,13 @@ const (
 	HttpHandlerTmpl         = "http_handler.tmpl"
 	HttpHandlerRegisterTmpl = "http_handler_register.tmpl"
 	HttpProtocolTmpl        = "http_protocol.tmpl"
-	HttpProtocolMethodTmpl  = "http_protocol_method.tmpl"
+	ApiTmpl                 = "api.tmpl"
+	ApiCustomTmpl           = "api_custom.tmpl"
+	ApiMethodTmpl           = "api_method.tmpl"
+	HandlersTmpl            = "handlers.tmpl"
+	HandlersCustomTmpl      = "handlers_custom.tmpl"
+	HandlersMethodTmpl      = "handlers_method.tmpl"
+	HandlersRouterTmpl      = "handlers_router.tmpl"
 	HttpProtocolTierTmpl    = "http_protocol_tier.tmpl"
 	HttpParamImplTmpl       = "http_param_impl.tmpl"
 )
@@ -86,7 +92,12 @@ var templateNames = []string{
 	HttpHandlerTmpl,
 	HttpHandlerRegisterTmpl,
 	HttpProtocolTmpl,
-	HttpProtocolMethodTmpl,
+	ApiTmpl,
+	ApiCustomTmpl,
+	ApiMethodTmpl,
+	HandlersTmpl,
+	HandlersCustomTmpl,
+	HandlersRouterTmpl,
 	HttpProtocolTierTmpl,
 	HttpParamImplTmpl,
 }

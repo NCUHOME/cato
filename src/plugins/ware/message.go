@@ -22,6 +22,7 @@ import (
 const (
 	modelImportAlias     = "model"
 	repoImportAlias      = "repo"
+	rdbImportAlias       = "rdb"
 	repoFetchOneFuncName = "FetchOne"
 	repoFetchAllFuncName = "FetchAll"
 )
@@ -273,6 +274,7 @@ func (mw *MessageWare) completeMessageContent(ctx *common.GenContext) error {
 		ModelName:   mw.message.GoIdent.GoName,
 		Fields:      mc.GetField(),
 		Methods:     mc.GetMethods(),
+		NeedEmpty:   mc.NeedEmpty,
 	}
 	messageName := mw.message.GoIdent.GoName
 	err := tmpl.Execute(fc.BorrowContentWriter(), pack)
@@ -294,15 +296,17 @@ func (mw *MessageWare) generateModelRepoFiles(ctx *common.GenContext) ([]*models
 	if repoPack == nil || repoPack.IsEmpty() {
 		return []*models.GenerateFileDesc{}, nil
 	}
-	modelPack := fc.GetCatoPackage()
+	modelPack, rdbPack := fc.GetCatoPackage(), fc.GetRdbRepoPackage()
 	mc := ctx.GetNowMessageContainer()
 	pack := &packs.RepoTmplPack{
 		RepoPackageName:       utils.GetGoPackageName(repoPack.ImportPath),
 		IsModelAnotherPackage: modelPack.IsSame(repoPack),
+		IsRdbAnotherPackage:   rdbPack.IsSame(repoPack),
 		ModelPackageAlias:     modelImportAlias,
+		RdbPackageAlias:       rdbImportAlias,
 		ModelPackage:          modelPack.ImportPath,
 		RepoFuncs:             mc.GetRepo(),
-		RdbPackage:            fc.GetRdbRepoPackage().ImportPath,
+		RdbPackage:            rdbPack.ImportPath,
 		ModelType:             ctx.GetNowMessageTypeName(),
 	}
 	files := make([]*models.GenerateFileDesc, 0)

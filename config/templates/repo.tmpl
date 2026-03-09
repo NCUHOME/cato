@@ -5,9 +5,16 @@ package {{.RepoPackageName}}
 import (
 	"context"
 
+	rdbx "github.com/ncuhome/cato/core/rdb"
+
 	{{- if not .IsModelAnotherPackage}}
     {{.ModelPackageAlias}} "{{.ModelPackage}}"
     {{- end}}
+
+	{{- if not .IsRdbAnotherPackage}}
+    {{.RdbPackageAlias}} "{{.RdbPackage}}"
+	{{- end}}
+
 )
 
 var (
@@ -16,6 +23,19 @@ var (
 
 func GetRepo() Repo {
 	return repo
+}
+
+{{- if .IsModelAnotherPackage}}
+func NewRdbRepo(engine rdbx.Engine[{{.ModelType}}]) Repo {
+{{- else}}
+func NewRdbRepo(engine rdbx.Engine[{{.ModelPackageAlias}}.{{.ModelType}}]) Repo {
+{{- end}}
+	{{- if not .IsRdbAnotherPackage}}
+	rdbRepo := {{.RdbPackageAlias}}.NewRdbRepo{{.ModelType}}(engine)
+	{{- else}}
+	rdbRepo := NewRdbRepo{{.ModelType}}(engine)
+	{{- end}}
+	return rdbRepo
 }
 
 type Repo interface {

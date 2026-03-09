@@ -39,6 +39,12 @@ func MapperGoTypeNameFromField(ctx *GenContext, field protoreflect.FieldDescript
 				TypeRaw: fmt.Sprintf("map[%s][%s]", keyType.GoType(), valueType.GoType()),
 			}
 		}
+		fullName := field.Message().(protoreflect.MessageDescriptor).FullName()
+		// special case for google.protobuf.*
+		switch fullName {
+		case "google.protobuf.Timestamp":
+			return MapperType{TypeRaw: "time.Time"}
+		}
 		typeName := MapperGoTypeNameFromMessage(ctx, field.Message().(protoreflect.MessageDescriptor))
 		return MapperType{TypeRaw: typeName.TypeRaw, IsSlice: field.IsList(), IsStruct: true}
 	case protoreflect.EnumKind:

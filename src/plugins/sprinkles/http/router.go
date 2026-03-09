@@ -19,10 +19,6 @@ func init() {
 	})
 }
 
-var (
-	extraImport = []string{"\"context\"", "\"net/http\""}
-)
-
 type RouterSprinkle struct {
 	value *generated.RouterOptions
 }
@@ -49,58 +45,43 @@ func (r *RouterSprinkle) Register(ctx *common.GenContext) error {
 	if relativePath == "" {
 		return nil
 	}
-	fc := ctx.GetNowServiceContainer()
-	if !fc.IsRegisterHttpApi() {
-		return nil
-	}
-	for _, i := range extraImport {
-		_, err := fc.BorrowExtraImportReader().Write([]byte(i))
-		if err != nil {
-			return err
-		}
-	}
 	// register router into handler service and protocol interface
 	return errors.Join(
-		r.registerHandler(ctx),
-		r.registerMethod(ctx),
-		r.registerTier(ctx),
+		r.registerRouter(ctx),
+		r.registerApiMethod(ctx),
+		r.registerHttpMethod(ctx),
 		r.registerSwagger(ctx),
 	)
 }
 
-// registerHandler will register method http handler wrap implement into handler service
-func (r *RouterSprinkle) registerHandler(ctx *common.GenContext) error {
+func (r *RouterSprinkle) registerRouter(ctx *common.GenContext) error {
 	method := ctx.GetNowMethod()
-	pack := &packs.RouteRegisterTmplPack{
-		HttpMethod:     r.value.Method,
-		HttpMethodPath: r.value.Router,
-		MethodName:     method.GoName,
+	pack := &packs.HttpRouterTmplPack{
+		Method: r.value.Method,
+		Uri:    r.value.Router,
+		Func:   method.GoName,
 	}
-	writer := ctx.GetNowServiceContainer().BorrowRegistersWriter()
-	return config.GetTemplate(config.HttpHandlerRegisterTmpl).Execute(writer, pack)
+	writer := ctx.GetNowServiceContainer().BorrowRouterssWriter()
+	return config.GetTemplate(config.HandlersRouterTmpl).Execute(writer, pack)
 }
 
-// registerMethod will register method into service interface
-func (r *RouterSprinkle) registerMethod(ctx *common.GenContext) error {
+func (r *RouterSprinkle) registerApiMethod(ctx *common.GenContext) error {
 	method := ctx.GetNowMethod()
 	pack := &packs.RouterProtocolMethodTmplPack{
 		MethodName:   method.GoName,
 		RequestType:  common.MapperGoTypeNameFromMessage(ctx, method.Input.Desc).GoType(),
 		ResponseType: common.MapperGoTypeNameFromMessage(ctx, method.Output.Desc).GoType(),
 	}
-	writer := ctx.GetNowServiceContainer().BorrowMethodsWriter()
-	return config.GetTemplate(config.HttpProtocolMethodTmpl).Execute(writer, pack)
+	sc := ctx.GetNowServiceContainer()
+	return config.GetTemplate(config.ApiMethodTmpl).Execute(sc.BorrowApisWriter(), pack)
+
 }
 
-func (r *RouterSprinkle) registerTier(ctx *common.GenContext) error {
+func (r *RouterSprinkle) registerHttpMethod(ctx *common.GenContext) error {
 	method := ctx.GetNowMethod()
-	pack := &packs.RouterProtocolTierTmplPack{
-		MethodName:   method.GoName,
-		RequestType:  common.MapperGoTypeNameFromMessage(ctx, method.Input.Desc).GoType(),
-		ResponseType: common.MapperGoTypeNameFromMessage(ctx, method.Output.Desc).GoType(),
-	}
-	writer := ctx.GetNowServiceContainer().BorrowTiersWriter()
-	return config.GetTemplate(config.HttpProtocolTierTmpl).Execute(writer, pack)
+	sc := ctx.GetNowServiceContainer()
+	_, err := sc.BorrowMethodsWriter().Write([]byte(method.GoName))
+	return err
 }
 
 func (r *RouterSprinkle) registerSwagger(ctx *common.GenContext) error {

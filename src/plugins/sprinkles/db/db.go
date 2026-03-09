@@ -42,7 +42,7 @@ func (d *DataBaseOptSprinkle) loadSqlPlaceholder() squirrel.PlaceholderFormat {
 	switch d.value.GetDbType() {
 	case generated.DbTypeEnum_CATO_DB_TYPE_POSTGRESQL:
 		return squirrel.Dollar
-	case generated.DbTypeEnum_CATO_DB_TYPE_SQLLITE:
+	case generated.DbTypeEnum_CATO_DB_TYPE_SQLITE3:
 		return squirrel.AtP
 	default:
 		return squirrel.Question
@@ -54,7 +54,7 @@ func (d *DataBaseOptSprinkle) Register(ctx *common.GenContext) error {
 	switch d.value.GetDbType() {
 	case generated.DbTypeEnum_CATO_DB_TYPE_POSTGRESQL:
 		placeHolder = "squirrel.Dollar"
-	case generated.DbTypeEnum_CATO_DB_TYPE_SQLLITE:
+	case generated.DbTypeEnum_CATO_DB_TYPE_SQLITE3:
 		placeHolder = "squirrel.AtP"
 	default:
 		placeHolder = "squirrel.Question"

@@ -43,9 +43,6 @@ func (m *ParamSprinkle) Register(ctx *common.GenContext) error {
 	if m.option == nil {
 		return nil
 	}
-	if !m.option.GetImpl() {
-		return nil
-	}
 	mc := ctx.GetNowMessageContainer()
 	// need impl param interface for message
 	tmpl := config.GetTemplate(config.HttpParamImplTmpl)
@@ -95,7 +92,7 @@ func (m *ParamSprinkle) registerSwagger(ctx *common.GenContext, message *protoge
 			}
 			swaggerField.Example = opt.Example
 			swaggerField.Description += opt.ExtraDesc
-			swaggerField.Format = opt.Format
+			swaggerField.Format, swaggerField.Required = opt.Format, opt.Must
 			swaggerField.Required = opt.Must
 			if swaggerField.Required {
 				required = append(required, swaggerField.Name)
