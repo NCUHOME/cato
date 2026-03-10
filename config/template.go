@@ -39,12 +39,12 @@ const (
 	RepoUpdateTmpl = "repo_update.tmpl"
 	RepoInsertTmpl = "repo_insert.tmpl"
 
-	HttpHandlerTmpl         = "http_handler.tmpl"
-	HttpHandlerRegisterTmpl = "http_handler_register.tmpl"
-	HttpProtocolTmpl        = "http_protocol.tmpl"
-	HttpProtocolMethodTmpl  = "http_protocol_method.tmpl"
-	HttpProtocolTierTmpl    = "http_protocol_tier.tmpl"
-	HttpParamImplTmpl       = "http_param_impl.tmpl"
+	ApiTmpl            = "api.tmpl"
+	ApiCustomTmpl      = "api_custom.tmpl"
+	ApiMethodTmpl      = "api_method.tmpl"
+	HandlersTmpl       = "handlers.tmpl"
+	HandlersCustomTmpl = "handlers_custom.tmpl"
+	HandlersRouterTmpl = "handlers_router.tmpl"
 )
 
 var (
@@ -83,12 +83,12 @@ var templateNames = []string{
 	RdbUpdateTmpl,
 	RdbInsertTmpl,
 
-	HttpHandlerTmpl,
-	HttpHandlerRegisterTmpl,
-	HttpProtocolTmpl,
-	HttpProtocolMethodTmpl,
-	HttpProtocolTierTmpl,
-	HttpParamImplTmpl,
+	ApiTmpl,
+	ApiCustomTmpl,
+	ApiMethodTmpl,
+	HandlersTmpl,
+	HandlersCustomTmpl,
+	HandlersRouterTmpl,
 }
 
 func init() {

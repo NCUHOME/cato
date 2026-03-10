@@ -15,6 +15,10 @@ func init() {
 	})
 }
 
+var (
+	extraImport = []string{"\"context\"", "\"net/http\""}
+)
+
 type ApiSprinkle struct {
 	value *generated.HttpOptions
 }
@@ -36,9 +40,18 @@ func (a *ApiSprinkle) Register(ctx *common.GenContext) error {
 	if a.value == nil {
 		return nil
 	}
-	fc := ctx.GetNowServiceContainer()
-	fc.SetRouterBasePath(a.value.GroupPrefix)
-	fc.SetRegisterHttpApi(a.value.AsHttpService)
+	sc := ctx.GetNowServiceContainer()
+	sc.SetRouterBasePath(a.value.GroupPrefix)
+	sc.SetRegisterHttpApi(a.value.AsHttpService)
+	if !sc.IsRegisterHttpApi() {
+		return nil
+	}
+	for _, i := range extraImport {
+		_, err := sc.BorrowExtraImportReader().Write([]byte(i))
+		if err != nil {
+			return err
+		}
+	}
 	if !ctx.NeedDoc() {
 		return nil
 	}

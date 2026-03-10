@@ -57,6 +57,7 @@ func (t *TableBasicSprinkle) Register(ctx *common.GenContext) error {
 	_, err := mc.BorrowFieldWriter().Write([]byte("ext *extension"))
 	// data object auto set ext package
 	mc.SetNeedExtraFile(true)
+	mc.NeedEmpty = true
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,17 @@
+package {{.ServicePackage}}
+
+import (
+	{{- range .ImportPackages}}
+	{{.}}
+	{{- end}}
+)
+
+type {{ .ServiceNameInner }}Service struct {}
+
+func (si *{{.ServiceNameInner}}Service) init() {
+
+}
+
+{{- range .Methods}}
+func (si *{{ $.ServiceNameInner }}Service ) {{.}} { panic("impl me")}
+{{- end}}

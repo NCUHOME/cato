@@ -1,6 +1,7 @@
 package ware
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 
@@ -47,27 +48,10 @@ func (sw *ServiceWare) Active(ctx *common.GenContext) (bool, error) {
 }
 
 func (sw *ServiceWare) Complete(ctx *common.GenContext) error {
-	return sw.completeContent(ctx)
-}
-
-func (sw *ServiceWare) completeContent(ctx *common.GenContext) error {
-	locate := ctx.GetNowFileContainer().GetCatoPackage()
 	sc := ctx.GetNowServiceContainer()
-	service := ctx.GetNowService()
-	tmpl := config.GetTemplate(config.HttpProtocolTmpl)
-	pack := &packs.HttpProtocolTmplPack{
-		HttpHandlerPackage: utils.GetGoPackageName(locate.GetPath()),
-		ServiceName:        service.GoName,
-		Methods:            sc.GetMethods(),
-		TierMethods:        sc.GetTiers(),
-	}
 	fc := ctx.GetNowFileContainer()
-	err := tmpl.Execute(fc.BorrowContentWriter(), pack)
-	if err != nil {
-		return err
-	}
 	for _, mi := range sc.GetExtraImport() {
-		_, err = fc.BorrowImportWriter().Write([]byte(mi))
+		_, err := fc.BorrowImportWriter().Write([]byte(mi))
 		if err != nil {
 			return err
 		}
@@ -105,22 +89,49 @@ func (sw *ServiceWare) generateHandler(ctx *common.GenContext) ([]*models.Genera
 	locate := ctx.GetNowFileContainer().GetCatoPackage()
 	sc := ctx.GetNowServiceContainer()
 	service := ctx.GetNowService()
-	tmpl := config.GetTemplate(config.HttpHandlerTmpl)
-	pack := &packs.HttpHandlerTmplPack{
-		HttpHandlerPackage:     utils.GetGoPackageName(locate.GetPath()),
-		ServiceName:            service.GoName,
-		RegisterServiceMethods: sc.GetRegisters(),
-		RouterBasePath:         sc.GetRouterBasePath(),
+	pack := &packs.HttpProtocolTmplPack{
+		ServicePackage:   utils.GetGoPackageName(locate.GetPath()),
+		ImportPackages:   append(sc.GetExtraImport(), ctx.GetNowFileContainer().GetImports()...),
+		ServiceName:      service.GoName,
+		ServiceNameInner: utils.FirstLower(service.GoName),
+		Methods:          sc.GetApis(),
+		RouterBasePath:   sc.GetRouterBasePath(),
+		HttpMethods:      sc.GetMethods(),
+		HttpRouters:      sc.GetRouters(),
 	}
-	sb := new(strings.Builder)
-	err := tmpl.Execute(sb, pack)
+	handlers, handlersCustom := new(strings.Builder), new(strings.Builder)
+	apis, apiCustom := new(strings.Builder), new(strings.Builder)
+	// handlers file
+	err := errors.Join(
+		config.GetTemplate(config.HandlersTmpl).Execute(handlers, pack),
+		config.GetTemplate(config.HandlersCustomTmpl).Execute(handlersCustom, pack),
+		config.GetTemplate(config.ApiCustomTmpl).Execute(apiCustom, pack),
+		config.GetTemplate(config.ApiTmpl).Execute(apis, pack),
+	)
 	if err != nil {
 		return nil, err
 	}
-	filename := filepath.Join(locate.ImportPath, "handlers.cato.go")
-	return []*models.GenerateFileDesc{{
-		Name:        filename,
-		Content:     sb.String(),
-		CheckExists: false,
-	}}, nil
+	files := []*models.GenerateFileDesc{
+		{
+			Name:        filepath.Join(locate.ImportPath, "handlers_custom.go"),
+			Content:     handlersCustom.String(),
+			CheckExists: true,
+		},
+		{
+			Name:        filepath.Join(locate.ImportPath, "handlers.cato.go"),
+			Content:     handlers.String(),
+			CheckExists: false,
+		},
+		{
+			Name:        filepath.Join(locate.ImportPath, "api_custom.go"),
+			Content:     apiCustom.String(),
+			CheckExists: true,
+		},
+		{
+			Name:        filepath.Join(locate.ImportPath, "api.cato.go"),
+			Content:     apis.String(),
+			CheckExists: false,
+		},
+	}
+	return files, nil
 }

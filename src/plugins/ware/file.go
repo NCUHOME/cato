@@ -71,6 +71,9 @@ func (fw *FileWare) Complete(ctx *common.GenContext) error {
 	}
 	allImports := append(fc.GetImports(), fc.GetOutImports()...)
 	allContent := fc.GetOutContent()
+	if len(allContent) == 0 {
+		return nil
+	}
 	pack := &packs.CatoFileTmplPack{
 		Imports:     allImports,
 		ContentList: allContent,

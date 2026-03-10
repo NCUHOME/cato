@@ -1,6 +1,8 @@
+{{- if .NeedEmpty }}
 var (
     empty = new({{.ModelName}})
 )
+{{- end}}
 
 type {{ .ModelName }} struct {
 {{- range .Fields }}

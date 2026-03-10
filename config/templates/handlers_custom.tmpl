@@ -1,0 +1,17 @@
+package {{.ServicePackage}}
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/ncuhome/cato/core/httpc"
+)
+
+func (hs *{{ .ServiceNameInner }}HttpService) init() {
+
+}
+
+
+{{- range .HttpMethods}}
+func (hs *{{ $.ServiceNameInner }}HttpService) {{.}}() http.HandlerFunc { panic("impl name") }
+{{- end}}
