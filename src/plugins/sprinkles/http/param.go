@@ -1,15 +1,18 @@
 package http
 
 import (
+	"bytes"
 	"log"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/ncuhome/cato/config"
 	"github.com/ncuhome/cato/generated"
 	"github.com/ncuhome/cato/src/plugins/common"
 	"github.com/ncuhome/cato/src/plugins/models"
+	"github.com/ncuhome/cato/src/plugins/models/packs"
 	"github.com/ncuhome/cato/src/plugins/sprinkles"
 )
 
@@ -40,7 +43,24 @@ func (m *ParamSprinkle) Register(ctx *common.GenContext) error {
 	if m.option == nil {
 		return nil
 	}
+	mc := ctx.GetNowMessageContainer()
 	// need impl param interface for message
+	tmpl := config.GetTemplate(config.HttpParamTmpl)
+	if tmpl == nil {
+		return nil
+	}
+	if m.option.Extend {
+		pack := &packs.HttpParamPack{ModelType: ctx.GetNowMessageTypeName()}
+		w := new(bytes.Buffer)
+		err := tmpl.Execute(w, pack)
+		if err != nil {
+			return err
+		}
+		_, err = mc.BorrowMethodsWriter().Write(w.Bytes())
+		if err != nil {
+			return err
+		}
+	}
 	swaggerMessage := m.registerSwagger(ctx, ctx.GetNowMessage())
 	ctx.AddDocMessage(swaggerMessage.Identify, swaggerMessage)
 	return nil
@@ -77,7 +97,7 @@ func (m *ParamSprinkle) registerSwagger(ctx *common.GenContext, message *protoge
 			}
 			swaggerField.Example = opt.Example
 			swaggerField.Description += opt.ExtraDesc
-			swaggerField.Format, swaggerField.Required = opt.Format, opt.Must
+			swaggerField.Format = opt.Format
 			swaggerField.Required = opt.Must
 			if swaggerField.Required {
 				required = append(required, swaggerField.Name)

@@ -20,6 +20,7 @@ message HttpOptions {
 message HttpParamOption {
   string example = 1;
   string extra_desc = 2;
+  bool extend = 3;
 }
 
 message HttpParamFieldOption {

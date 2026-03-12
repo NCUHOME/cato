@@ -5,6 +5,4 @@ type Param interface {
 	GetMessage() string
 	SetCode(code string)
 	SetMessage(message string)
-	GetBody() any
-	ResetBody()
 }
