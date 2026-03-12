@@ -45,6 +45,7 @@ const (
 	HandlersTmpl       = "handlers.tmpl"
 	HandlersCustomTmpl = "handlers_custom.tmpl"
 	HandlersRouterTmpl = "handlers_router.tmpl"
+	HttpParamTmpl      = "http_param.tmpl"
 )
 
 var (
@@ -89,6 +90,7 @@ var templateNames = []string{
 	HandlersTmpl,
 	HandlersCustomTmpl,
 	HandlersRouterTmpl,
+	HttpParamTmpl,
 }
 
 func init() {
