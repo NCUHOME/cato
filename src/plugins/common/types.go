@@ -50,6 +50,10 @@ func MapperGoTypeNameFromField(ctx *GenContext, field protoreflect.FieldDescript
 	case protoreflect.EnumKind:
 		// todo can define if enum map to string or int
 		return MapperType{TypeRaw: "string"}
+	case protoreflect.FloatKind:
+		return MapperType{TypeRaw: "float32"}
+	case protoreflect.DoubleKind:
+		return MapperType{TypeRaw: "float64"}
 	default:
 		return MapperType{TypeRaw: field.Kind().String(), IsSlice: field.IsList()}
 	}
