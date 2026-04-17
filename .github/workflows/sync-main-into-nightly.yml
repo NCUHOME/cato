@@ -1,0 +1,36 @@
+name: Sync main into nightly
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-automation
+  cancel-in-progress: false
+
+jobs:
+  sync-nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch main and nightly
+        run: git fetch --no-tags origin main nightly
+
+      - name: Merge main into nightly
+        run: |
+          git checkout -B nightly origin/nightly
+          git merge --no-edit origin/main
+          git push origin HEAD:nightly
