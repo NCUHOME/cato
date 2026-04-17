@@ -46,7 +46,7 @@ func (engine *XormEngine[T]) FetchAll(ctx context.Context, table string, sql str
 }
 
 func (engine *XormEngine[T]) Exec(ctx context.Context, table, sql string, args ...interface{}) (int64, error) {
-	packs := make([]interface{}, len(args)+1)
+	packs := make([]interface{}, 1, len(args)+1)
 	packs[0] = sql
 	packs = append(packs, args...)
 	result, err := engine.session(ctx).Table(table).Exec(packs...)
