@@ -4,6 +4,8 @@ go 1.24.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/panjf2000/ants/v2 v2.12.0
+	github.com/rfyiamcool/go-timewheel v1.1.0
 	golang.org/x/tools v0.40.0
 	google.golang.org/protobuf v1.31.0
 	xorm.io/xorm v1.3.11
