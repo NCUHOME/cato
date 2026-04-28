@@ -1,0 +1,123 @@
+name: Release nightly from main release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-automation
+  cancel-in-progress: false
+
+jobs:
+  release-nightly:
+    if: github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_NAME: ${{ github.event.release.name }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      RELEASE_URL: ${{ github.event.release.html_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch branches and tags
+        run: git fetch origin main nightly --tags
+
+      - name: Validate released tag comes from main
+        id: validate
+        run: |
+          if [[ "${RELEASE_TAG}" == *.nightly ]]; then
+            echo "skip nightly tag ${RELEASE_TAG}"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          release_sha="$(git rev-list -n 1 "${RELEASE_TAG}")"
+          if git merge-base --is-ancestor "${release_sha}" origin/main; then
+            echo "release tag ${RELEASE_TAG} belongs to main"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release tag ${RELEASE_TAG} is not on main, skip nightly prerelease"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync main into nightly before release
+        if: steps.validate.outputs.should_release == 'true'
+        id: sync
+        run: |
+          git checkout -B nightly origin/nightly
+          git merge --no-edit origin/main
+          git push origin HEAD:nightly
+          echo "nightly_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Preview nightly prerelease in act
+        if: steps.validate.outputs.should_release == 'true' && env.ACT == 'true'
+        run: |
+          echo "Would create or update prerelease ${RELEASE_TAG}.nightly from nightly commit ${{ steps.sync.outputs.nightly_sha }}"
+
+      - name: Create or update nightly prerelease
+        if: steps.validate.outputs.should_release == 'true' && env.ACT != 'true'
+        uses: actions/github-script@v7
+        env:
+          NIGHTLY_SHA: ${{ steps.sync.outputs.nightly_sha }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const releaseTag = process.env.RELEASE_TAG;
+            const releaseName = process.env.RELEASE_NAME || releaseTag;
+            const releaseUrl = process.env.RELEASE_URL;
+            const nightlySha = process.env.NIGHTLY_SHA;
+            const nightlyTag = `${releaseTag}.nightly`;
+            const nightlyName = `${releaseName}.nightly`;
+            const body = [
+              `Nightly prerelease synced from ${releaseTag}.`,
+              '',
+              `Source release: ${releaseUrl}`,
+              `Source branch: nightly`,
+              `Nightly commit: ${nightlySha}`,
+            ].join('\n');
+
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag: nightlyTag,
+              });
+
+              await github.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id: existing.data.id,
+                name: nightlyName,
+                body,
+                prerelease: true,
+                draft: false,
+              });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+
+              await github.rest.repos.createRelease({
+                owner,
+                repo,
+                tag_name: nightlyTag,
+                target_commitish: nightlySha,
+                name: nightlyName,
+                body,
+                prerelease: true,
+                draft: false,
+              });
+            }
