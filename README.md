@@ -4,70 +4,229 @@
 [![GitHub issues](https://img.shields.io/github/issues/NCUHOME/cato)](https://github.com/NCUHOME/cato/issues)
 [![GitHub stars](https://img.shields.io/github/stars/NCUHOME/cato)](https://github.com/NCUHOME/cato/stargazers)
 
-> A powerful toolkit for building stable and maintainable Golang server-side projects.
+English | [中文](./README_CN.md)
 
-**⚠️ Important Notice: Active Development Stage**
-This project is currently under active development and **may introduce breaking changes at any time**. It is not recommended for production use.
+Cato is a protobuf-driven code generator for Go server projects. It keeps storage metadata, HTTP routing, request description, and model generation rules close to your `.proto` files, then generates the repetitive layers around them.
 
-## ✨ What Can Cato Do?
+> [!WARNING]
+> Cato is still under active development. Breaking changes can happen, and the current version should be evaluated carefully before production use.
 
-Cato's current capabilities are provided through a series of `proto-gen-*` plugins.
+## Why Cato
 
-### proto-gen-cato
+- Define server-side structure once in protobuf and reuse it across models, repo interfaces, RDB implementations, and HTTP services.
+- Generate code that is repetitive but easy to drift by hand: table metadata, CRUD skeletons, route registration, request docs, and struct tags.
+- Keep manual extension points safe. Files ending in `.cato.go` are regenerated every time, while `*_custom.go`, `*_extend.go`, and `extension.go` are only created when missing.
 
-#### Note ⚠️
-`proto-gen-cato` requires your `.proto` file content to adhere to the [Protocol Buffers Official Style Guide](https://protobuf.dev/programming-guides/style/). Otherwise, the generated struct field names may be difficult to understand.
+## What Cato Generates
 
-This plugin provides various capabilities by using custom options from the [`proto`](https://github.com/NCUHOME/cato/tree/main/proto) directory within different scopes.
-For specific usage examples, please refer to the proto files in [cato-example-bms (Simple Book Management System)](https://github.com/NCUHOME/cato-example-bms/tree/main/proto).
+- Model files with struct fields, tags, table helpers, column groups, JSON conversion helpers, and time-format helpers.
+- Repo interfaces and constructors backed by the generic `core/rdb.Engine`.
+- Default RDB implementations that currently target the `core/rdb` abstractions and ship with an `xorm` adapter.
+- HTTP service interfaces, handler registration scaffolding, and OpenAPI 2.0 `swagger.json`.
+- Shared protobuf option definitions under [`proto`](./proto) and their generated Go bindings under [`generated`](./generated).
 
-The responsibilities of the files in the `proto` directory are divided as follows:
-+ **`extension.proto`**: Main entry point for plugin options.
-+ **`db.proto`**: Options related to relational databases.
-+ **`defines.proto`**: Options for controlling file generation.
-+ **`http.proto`**: Options for generating HTTP service-related code.
-+ **`struct.proto`**: Options for general struct-related generation.
+## Quick Start
 
-#### Install
-```shell
-go install -v github.com/ncuhome/cato/cmd/protoc-gen-cato@latest
+### Requirements
+
+- Go 1.24 or newer
+- `protoc`
+- `protoc-gen-go`
+
+### Install the Plugin
+
+```sh
+go install github.com/ncuhome/cato/cmd/protoc-gen-cato@latest
 ```
 
-#### Usage
-First, you need to reference the `*.proto` files from the `proto` directory. Download the proto files locally.
-```shell
-# Note: Replace /cato/proto/path with your local path to the `cato/proto` directory.
-protoc -I=your/project/proto/path -I=/cato/proto/path --cato_out=../ --cato_opt=ext_out_dir=../,swagger_path=swagger.json,api_host=localhost path/to/your/file.proto
+Or from this repository:
+
+```sh
+make install
 ```
-+ `ext_out_dir`: The base directory for Cato's generated files, which should be consistent with `cato_out`.
-+ `swagger_path`: If you need to generate OpenAPI documentation, specify the path for the `swagger.json` file.
-+ `api_host`: Specifies the host attribute in the `swagger.json` file.
 
-**Core Features:**
-+ Using `db.proto` options to generate:
-    + Database-related `Table` models.
-    + Database `Repo` methods: `Find`, `Delete`, `Insert`, `Update`.
-    + Implementation of relational database `Rdb` methods.
-+ Using `http.proto` options to generate:
-    + `HTTP API` interface methods.
-    + `HTTP params` definitions and parameter binding.
-    + `OpenAPI 2.0` interface documentation.
-+ Using `struct.proto` options to generate:
-    + Structs with `tags`, typically used for generating `BO` (Business Objects).
-    + `Mapper` methods for converting between different structs.
+If your generated project imports Cato runtime helpers, add the module dependency there as well:
 
-## 🎯 The Goal of Cato
+```sh
+go get github.com/ncuhome/cato@latest
+```
 
-Cato is committed to the long-term maintenance of **stability** and **clarity** in your Golang server-side projects. The name Cato is inspired by the game [《CATO: Butterered Cat》](https://store.steampowered.com/app/1999520/CATO_Buttered_Cat/), whose core concept is **"a cat always lands on its feet."**
+### Make the Option Protos Available
 
-For Golang server-side projects, using Cato helps ensure your project always lands smoothly—maintaining stability and controllability while enabling the codebase to possess the **flexibility and fluidity** of a cat.
+Cato's custom options are imported as `cato/proto/*.proto`, so your `protoc` include path must point to the parent directory that contains the `cato` folder.
 
-## 🛣️ Development Roadmap
+One workable layout is:
 
-We have **many, many** features, plans, and improvements yet to complete.
-+ [x] Establish common packages to abstract foundational `interfaces`.
-+ [ ] Support `DDL` statement generation and `DB Migrate`.
-+ [ ] Support `enum` type generation.
-+ [ ] Optimize the generation method for `Rdb` and `Repo`.
-+ [ ] Optimize the global passing of the `generator context`.
-+ [ ] ...
+```text
+third_party/
+  cato/
+    proto/
+      extension.proto
+      db.proto
+      defines.proto
+      http.proto
+      struct.proto
+```
+
+With that layout, pass `-I ./third_party` to `protoc`.
+
+### Describe Output Packages in Your Proto File
+
+At file level, Cato currently uses these package options:
+
+- `cato_package`: package for generated model files and HTTP service scaffolding
+- `repo_package`: package for generated repo interfaces
+- `rdb_repo_package`: package for generated default RDB implementations
+
+Example:
+
+```proto
+syntax = "proto3";
+
+package example.user.v1;
+option go_package = "github.com/your-org/your-project/api/user/v1;userv1";
+
+import "cato/proto/extension.proto";
+
+option (cato.cato_opt) = {
+  cato_package: "internal/model/user"
+  repo_package: "internal/repo/user"
+  rdb_repo_package: "internal/repo/user/rdb"
+};
+
+message User {
+  option (cato.db_opt) = {
+    db_type: CATO_DB_TYPE_MYSQL
+  };
+  option (cato.table_opt) = {
+    name_option: { simple_name: "users" }
+  };
+  option (cato.struct_opt) = {
+    field_default_tags: [
+      {
+        tag_name: "json"
+        tag_value: "%s,omitempty"
+        mapper: CATO_FIELD_MAPPER_SNAKE_CASE
+      }
+    ]
+  };
+
+  int64 id = 1 [(cato.column_opt) = {
+    col_desc: {
+      field_name: "id"
+      comment: "primary key"
+    }
+    keys: [{ key_name: "PRIMARY", key_type: CATO_DB_KEY_TYPE_PRIMARY }]
+  }];
+
+  string nickname = 2 [(cato.column_opt) = {
+    col_desc: {
+      field_name: "nickname"
+      comment: "display name"
+    }
+  }];
+}
+
+message CreateUserRequest {
+  option (cato.http_param_opt) = {};
+
+  string nickname = 1 [(cato.http_pf_opt) = {
+    name: "nickname"
+    must: true
+    example: "neo"
+  }];
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+service UserService {
+  option (cato.http_opt) = {
+    group_prefix: "/v1/users"
+    as_http_service: true
+  };
+
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (cato.router_opt) = {
+      router: "/create"
+      method: "POST"
+    };
+  }
+}
+```
+
+### Run `protoc`
+
+```sh
+protoc \
+  -I . \
+  -I ./third_party \
+  --go_out=. \
+  --go_opt=paths=source_relative \
+  --cato_out=. \
+  --cato_opt=ext_out_dir=.,swagger_path=./swagger.json,api_host=localhost \
+  api/user/v1/user.proto
+```
+
+`--cato_opt` currently supports:
+
+| Flag | Description |
+| --- | --- |
+| `ext_out_dir` | Root directory used to check whether custom files already exist. In practice this should usually match `--cato_out` and point at your Go module root. |
+| `swagger_path` | Optional output path for generated OpenAPI 2.0 JSON. |
+| `api_host` | Optional `host` value written into `swagger.json`. |
+
+## Generated Files and Overwrite Rules
+
+Running Cato can produce files like:
+
+- `<proto>.cato.go`: shared model output for the protobuf file
+- `<message>_repo.cato.go`: generated repo interface and constructor
+- `<message>_rdb.cato.go`: generated default RDB implementation
+- `<message>_extend.go`: model extension file, created once and preserved
+- `extension.go`: repo extension interface, created once and preserved
+- `handlers.cato.go`: generated HTTP handler registration
+- `handlers_custom.go`: custom HTTP extension file, created once and preserved
+- `api.cato.go`: generated service interface bootstrap
+- `api_custom.go`: custom service extension file, created once and preserved
+
+The intended workflow is simple: regenerate `.cato.go` files whenever your proto changes, and put handwritten logic into the preserved extension files.
+
+## Runtime Packages
+
+Generated code currently imports helper packages from this repository:
+
+- [`core/rdb`](./core/rdb): generic repo engine abstraction and a built-in `xorm` implementation
+- [`core/httpc`](./core/httpc): HTTP service abstraction and handler container utilities
+
+The repository also contains [`core/param`](./core/param), a small request/response binder abstraction that can be used by surrounding application code, although the current templates do not wire it automatically.
+
+## Repository Layout
+
+```text
+cmd/protoc-gen-cato/   protoc plugin entry
+proto/                 protobuf option definitions exposed to users
+generated/             generated Go code for custom protobuf options
+src/                   generator implementation and option handlers
+core/                  runtime helpers used by generated code
+config/templates/      code generation templates
+```
+
+## Current Status and Limitations
+
+- Follow the protobuf official style guide. Field and message naming outside the usual conventions can lead to awkward generated identifiers.
+- Cato already defines DDL-related protobuf options, but migration/DDL generation is not complete yet.
+- Current runtime integrations are centered on repo generation, HTTP scaffolding, and the `xorm`-backed RDB adapter.
+- `swagger.json` generation is OpenAPI 2.0, not OpenAPI 3.
+
+## Example Project
+
+For a fuller example of how these options are used in practice, see [cato-example-bms](https://github.com/NCUHOME/cato-example-bms/tree/main/proto).
+
+## Roadmap
+
+- Improve RDB and repo generation.
+- Support enum-oriented generation.
+- Complete DDL and migration support.
+- Continue simplifying generator context and extensibility.
