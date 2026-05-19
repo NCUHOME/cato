@@ -50,16 +50,7 @@ func (m *ParamSprinkle) registerSwagger(ctx *common.GenContext, message *protoge
 	identifyName := string(message.Desc.FullName())
 	properties, required := make([]*models.SwaggerMessageField, 0), make([]string, 0)
 	for _, field := range message.Fields {
-		swaggerField := &models.SwaggerMessageField{
-			Name:        string(field.Desc.Name()),
-			Description: field.Comments.Leading.String(),
-			Type:        field.Desc.Kind().String(),
-			Identify:    string(field.Desc.FullName().Name()),
-		}
-		if field.Enum != nil && len(field.Enum.Values) > 0 {
-			swaggerField.Enum = m.transEnums(field.Enum.Values)
-			swaggerField.Type = "string"
-		}
+		swaggerField := m.newSwaggerField(field)
 		if field.Desc.Kind() == protoreflect.MessageKind && field.Message.Desc.FullName() != message.Desc.FullName() {
 			swaggerField.Refer = m.registerSwagger(ctx, field.Message)
 			swaggerField.Type = "object"
@@ -95,6 +86,21 @@ func (m *ParamSprinkle) registerSwagger(ctx *common.GenContext, message *protoge
 	}
 	ctx.AddDocMessage(identifyName, swaggerMessage)
 	return swaggerMessage
+}
+
+func (m *ParamSprinkle) newSwaggerField(field *protogen.Field) *models.SwaggerMessageField {
+	swaggerField := &models.SwaggerMessageField{
+		Name:        string(field.Desc.Name()),
+		Description: field.Comments.Leading.String(),
+		Type:        field.Desc.Kind().String(),
+		Identify:    string(field.Desc.FullName().Name()),
+		IsSlice:     field.Desc.IsList(),
+	}
+	if field.Enum != nil && len(field.Enum.Values) > 0 {
+		swaggerField.Enum = m.transEnums(field.Enum.Values)
+		swaggerField.Type = "string"
+	}
+	return swaggerField
 }
 
 func (m *ParamSprinkle) transEnums(enums []*protogen.EnumValue) []string {

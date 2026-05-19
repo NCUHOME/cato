@@ -90,21 +90,26 @@ func (swaggerField *SwaggerMessageField) AsRequest(location string) interface{} 
 	if len(swaggerField.Enum) > 0 {
 		data["enum"] = swaggerField.Enum
 	}
-	if swaggerField.Refer != nil {
+	if swaggerField.IsSlice {
+		data["type"] = "array"
+		data["items"] = swaggerField.itemsType()
+	} else if swaggerField.Refer != nil {
 		data["schema"] = map[string]interface{}{
 			"$ref": fmt.Sprintf("#/definitions/%s", swaggerField.Refer.Identify),
 		}
+	} else {
+		data["type"] = swaggerField.Type
 	}
 	return data
 }
 
-func (swaggerField *SwaggerMessageField) itemsType() map[string]string {
+func (swaggerField *SwaggerMessageField) itemsType() map[string]interface{} {
 	if swaggerField.Refer != nil {
-		return map[string]string{
+		return map[string]interface{}{
 			"$ref": fmt.Sprintf("#/definitions/%s", swaggerField.Refer.Identify),
 		}
 	}
-	return map[string]string{
+	return map[string]interface{}{
 		"type": swaggerField.Type,
 	}
 }
@@ -127,7 +132,7 @@ func (swaggerField *SwaggerMessageField) AsDefinition() map[string]interface{} {
 	if len(swaggerField.Enum) > 0 {
 		def["enum"] = swaggerField.Enum
 	}
-	if swaggerField.Refer != nil {
+	if swaggerField.Refer != nil && !swaggerField.IsSlice {
 		def["$ref"] = fmt.Sprintf("#/definitions/%s", swaggerField.Refer.Identify)
 	}
 	return def
