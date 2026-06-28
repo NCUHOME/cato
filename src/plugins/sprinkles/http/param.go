@@ -126,7 +126,7 @@ func (m *ParamSprinkle) newSwaggerField(field *protogen.Field) *models.SwaggerMe
 func (m *ParamSprinkle) transEnums(enums []*protogen.EnumValue) []string {
 	ss := make([]string, len(enums))
 	for i, enum := range enums {
-		ss[i] = enum.GoIdent.GoName
+		ss[i] = string(enum.Desc.Name())
 	}
 	return ss
 }
