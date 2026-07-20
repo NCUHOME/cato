@@ -38,6 +38,8 @@ message TableNameOption {
 message TableOption {
   TableNameOption name_option = 1;
   cato.struct.FieldMapper field_mapper = 2;
+  // when true, injects base entity fields: Id (int64, PK), CreateTime, UpdateTime, DeleteTime (time.Time)
+  bool impl_base_model = 3;
 }
 
 enum DBKeyType {
