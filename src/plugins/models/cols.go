@@ -23,11 +23,11 @@ type Key struct {
 }
 
 func (k *Key) GetFieldNameCombine() string {
-	filedNames := make([]string, len(k.Fields))
+	fieldNames := make([]string, len(k.Fields))
 	for i, f := range k.Fields {
-		filedNames[i] = f.Name
+		fieldNames[i] = f.Name
 	}
-	return strings.Join(filedNames, "And")
+	return strings.Join(fieldNames, "And")
 }
 
 type Col struct {
